@@ -5,7 +5,7 @@ function Overlay() {
   const [profilePic, setProfilePic] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Preluăm parametrii din URL
+  // URL params
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get("user") || "hyghman";
   const color = urlParams.get("color") || "#00ffaa";
@@ -15,32 +15,40 @@ function Overlay() {
   const showPfp = urlParams.get("showPfp") === "true";
   const goalColor = urlParams.get("goalColor") || "#ffffff";
 
-  const fetchKickUser = async () => {
-    try {
-      const res = await fetch(`https://kick.com/api/v1/channels/${username}`);
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
-
-      if (data && data.followersCount && data.user?.profile_pic) {
-        setFollowers(data.followersCount);
-        setProfilePic(data.user.profile_pic);
-      } else {
-        setFollowers(0);
-        setProfilePic("");
-      }
-    } catch (err) {
-      console.error("Kick API error:", err);
-      setFollowers(0);
-      setProfilePic("");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    let active = true;
+
+    async function fetchKickUser() {
+      try {
+        const res = await fetch(`https://kick.com/api/v1/channels/${username}`);
+        if (!res.ok) throw new Error("Fetch failed");
+        const data = await res.json();
+
+        if (active && data && data.followersCount && data.user?.profile_pic) {
+          setFollowers(data.followersCount);
+          setProfilePic(data.user.profile_pic);
+        } else if (active) {
+          setFollowers(0);
+          setProfilePic("");
+        }
+      } catch (err) {
+        console.error("Kick API error:", err);
+        if (active) {
+          setFollowers(0);
+          setProfilePic("");
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
     fetchKickUser();
-    const interval = setInterval(fetchKickUser, 60000); // update la 1 min
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchKickUser, 60000);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
   }, [username]);
 
   if (loading) {
