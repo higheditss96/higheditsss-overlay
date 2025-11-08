@@ -5,23 +5,33 @@ function Overlay() {
   const [profilePic, setProfilePic] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // Preluăm parametrii din URL
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get("user") || "hyghman";
   const color = urlParams.get("color") || "#00ffaa";
   const font = urlParams.get("font") || "Poppins";
   const useGoal = urlParams.get("useGoal") === "true";
-  const goal = parseInt(urlParams.get("goal") || "10000");
+  const goal = parseInt(urlParams.get("goal") || "10000", 10);
   const showPfp = urlParams.get("showPfp") === "true";
   const goalColor = urlParams.get("goalColor") || "#ffffff";
 
   const fetchKickUser = async () => {
     try {
       const res = await fetch(`https://kick.com/api/v1/channels/${username}`);
+      if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
-      setFollowers(data.followersCount);
-      setProfilePic(data.user.profile_pic);
+
+      if (data && data.followersCount && data.user?.profile_pic) {
+        setFollowers(data.followersCount);
+        setProfilePic(data.user.profile_pic);
+      } else {
+        setFollowers(0);
+        setProfilePic("");
+      }
     } catch (err) {
-      console.error("User not found", err);
+      console.error("Kick API error:", err);
+      setFollowers(0);
+      setProfilePic("");
     } finally {
       setLoading(false);
     }
@@ -29,9 +39,9 @@ function Overlay() {
 
   useEffect(() => {
     fetchKickUser();
-    const interval = setInterval(fetchKickUser, 60000);
+    const interval = setInterval(fetchKickUser, 60000); // update la 1 min
     return () => clearInterval(interval);
-  }, []);
+  }, [username]);
 
   if (loading) {
     return (
@@ -39,7 +49,7 @@ function Overlay() {
         style={{
           background: "transparent",
           fontFamily: font,
-          color: color,
+          color,
           textAlign: "center",
           fontSize: "32px",
           paddingTop: "20vh",
@@ -50,7 +60,7 @@ function Overlay() {
     );
   }
 
-  const remaining = goal - followers;
+  const remaining = Math.max(goal - followers, 0);
   const progress = Math.min((followers / goal) * 100, 100);
   const goalReached = remaining <= 0;
 
@@ -58,18 +68,20 @@ function Overlay() {
     <div
       style={{
         background: "transparent",
-        color: color,
+        color,
         fontFamily: font,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         height: "100vh",
+        width: "100%",
         textAlign: "center",
+        overflow: "hidden",
       }}
     >
       {/* Profile Picture */}
-      {showPfp && profilePic && (
+      {showPfp && profilePic ? (
         <img
           src={profilePic}
           alt="profile"
@@ -79,16 +91,17 @@ function Overlay() {
             borderRadius: "50%",
             marginBottom: "20px",
             boxShadow: `0 0 20px ${color}`,
+            objectFit: "cover",
           }}
         />
-      )}
+      ) : null}
 
       {/* Followers Counter */}
       <div
         style={{
           fontSize: "64px",
           fontWeight: "700",
-          color: color,
+          color,
           textShadow: `0 0 10px ${color}`,
           lineHeight: "1.1",
         }}
@@ -143,7 +156,7 @@ function Overlay() {
             }}
           />
 
-          {/* Text inside the bar */}
+          {/* Text inside bar */}
           <span
             style={{
               zIndex: 2,
