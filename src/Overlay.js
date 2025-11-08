@@ -98,7 +98,6 @@ function Overlay() {
             height: "120px",
             borderRadius: "50%",
             marginBottom: "20px",
-            boxShadow: `0 0 20px ${color}`,
             objectFit: "cover",
           }}
         />
@@ -110,7 +109,6 @@ function Overlay() {
           fontSize: "64px",
           fontWeight: "700",
           color,
-          textShadow: `0 0 10px ${color}`,
           lineHeight: "1.1",
         }}
       >
@@ -134,11 +132,11 @@ function Overlay() {
         <div
           style={{
             position: "relative",
-            width: "60%",
-            height: "30px",
-            background: "#111",
-            borderRadius: "15px",
-            marginTop: "20px",
+            width: "40%", // bara mai scurtă
+            height: "40px", // mai groasă
+            background: "#1a1a1a",
+            borderRadius: "12px",
+            marginTop: "25px",
             overflow: "hidden",
             border: `2px solid ${goalColor}`,
             display: "flex",
@@ -148,7 +146,6 @@ function Overlay() {
             fontWeight: "700",
             fontSize: "14px",
             color: "#fff",
-            textShadow: "0 0 8px rgba(0,0,0,0.8)",
           }}
         >
           {/* Progress bar */}
@@ -171,12 +168,11 @@ function Overlay() {
               color: "#fff",
               textAlign: "center",
               width: "100%",
-              textShadow: "0 0 6px rgba(0,0,0,0.7)",
             }}
           >
             {goalReached
-              ? "🎉 Goal reached!"
-              : `🎯 ${remaining.toLocaleString()} left`}
+              ? "Goal reached!"
+              : `${remaining.toLocaleString()} left`}
           </span>
         </div>
       )}
