@@ -72,6 +72,19 @@ function Overlay() {
   const progress = Math.min((followers / goal) * 100, 100);
   const goalReached = remaining <= 0;
 
+  // funcție simplă de contrast: dacă culoarea e deschisă => text negru
+  function getContrastColor(hex) {
+    const c = hex.substring(1); // scoate #
+    const rgb = parseInt(c, 16);
+    const r = (rgb >> 16) & 255;
+    const g = (rgb >> 8) & 255;
+    const b = rgb & 255;
+    const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+    return luminance > 180 ? "#000" : "#fff"; // dacă e foarte deschis, text negru
+  }
+
+  const textColor = getContrastColor(goalColor);
+
   return (
     <div
       style={{
@@ -97,7 +110,7 @@ function Overlay() {
             width: "120px",
             height: "120px",
             borderRadius: "50%",
-            marginBottom: "20px",
+            marginBottom: "15px",
             objectFit: "cover",
           }}
         />
@@ -106,25 +119,14 @@ function Overlay() {
       {/* Followers Counter */}
       <div
         style={{
-          fontSize: "64px",
+          fontSize: "72px",
           fontWeight: "700",
           color,
           lineHeight: "1.1",
+          marginBottom: useGoal ? "15px" : "0",
         }}
       >
         {followers.toLocaleString()}
-      </div>
-
-      <div
-        style={{
-          fontSize: "22px",
-          fontWeight: "600",
-          color: "#fff",
-          opacity: 0.9,
-          marginBottom: useGoal ? "10px" : "0",
-        }}
-      >
-        followers
       </div>
 
       {/* GOAL BAR */}
@@ -132,11 +134,10 @@ function Overlay() {
         <div
           style={{
             position: "relative",
-            width: "40%", // bara mai scurtă
-            height: "40px", // mai groasă
+            width: "35%", // bara mai scurtă
+            height: "45px", // mai groasă
             background: "#1a1a1a",
             borderRadius: "12px",
-            marginTop: "25px",
             overflow: "hidden",
             border: `2px solid ${goalColor}`,
             display: "flex",
@@ -144,8 +145,8 @@ function Overlay() {
             justifyContent: "center",
             fontFamily: font,
             fontWeight: "700",
-            fontSize: "14px",
-            color: "#fff",
+            fontSize: "20px", // text mai mare
+            color: textColor,
           }}
         >
           {/* Progress bar */}
@@ -165,9 +166,9 @@ function Overlay() {
           <span
             style={{
               zIndex: 2,
-              color: "#fff",
               textAlign: "center",
               width: "100%",
+              mixBlendMode: "difference", // face textul vizibil și pe fundal luminos
             }}
           >
             {goalReached
