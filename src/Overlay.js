@@ -72,19 +72,6 @@ function Overlay() {
   const progress = Math.min((followers / goal) * 100, 100);
   const goalReached = remaining <= 0;
 
-  // funcție simplă de contrast: dacă culoarea e deschisă => text negru
-  function getContrastColor(hex) {
-    const c = hex.substring(1); // scoate #
-    const rgb = parseInt(c, 16);
-    const r = (rgb >> 16) & 255;
-    const g = (rgb >> 8) & 255;
-    const b = rgb & 255;
-    const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-    return luminance > 180 ? "#000" : "#fff"; // dacă e foarte deschis, text negru
-  }
-
-  const textColor = getContrastColor(goalColor);
-
   return (
     <div
       style={{
@@ -134,7 +121,7 @@ function Overlay() {
         <div
           style={{
             position: "relative",
-            width: "35%", // bara mai scurtă
+            width: "35%", // bara scurtă
             height: "45px", // mai groasă
             background: "#1a1a1a",
             borderRadius: "12px",
@@ -145,8 +132,8 @@ function Overlay() {
             justifyContent: "center",
             fontFamily: font,
             fontWeight: "700",
-            fontSize: "20px", // text mai mare
-            color: textColor,
+            fontSize: "20px", // text mare
+            color: "#000", // text negru fix
           }}
         >
           {/* Progress bar */}
@@ -168,7 +155,6 @@ function Overlay() {
               zIndex: 2,
               textAlign: "center",
               width: "100%",
-              mixBlendMode: "difference", // face textul vizibil și pe fundal luminos
             }}
           >
             {goalReached
