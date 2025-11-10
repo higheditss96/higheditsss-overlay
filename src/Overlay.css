@@ -11,16 +11,37 @@
   --main-color: #00ffaa;
 }
 
+/* === PROFIL PIC FĂRĂ GLOW, DOAR DROP SHADOW === */
 .pfp {
   width: 120px;
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 0 25px var(--main-color);
   margin-bottom: 25px;
   z-index: 3;
+  opacity: 0;
+  animation: fadeInPic 1.2s ease forwards;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6); /* drop shadow subtil */
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
+.pfp:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75);
+}
+
+@keyframes fadeInPic {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* === FOLLOWER COUNTER === */
 .followers-count {
   font-family: "Poppins", sans-serif;
   font-size: 5rem;
@@ -35,7 +56,7 @@
   margin-top: -40px;
 }
 
-/* GOAL BAR */
+/* === GOAL BAR === */
 .goal-container {
   margin-top: 30px;
   width: 420px;
@@ -72,7 +93,7 @@
   z-index: 2;
 }
 
-/* Aura cinematică */
+/* === AURA CINEMATICĂ === */
 .aura {
   position: absolute;
   top: 50%;
@@ -98,7 +119,7 @@
   }
 }
 
-/* BULE */
+/* === BULE === */
 .bubble-layer {
   position: fixed;
   top: 0;
