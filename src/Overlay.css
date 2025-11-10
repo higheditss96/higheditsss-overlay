@@ -24,53 +24,126 @@
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 12px;
-  box-shadow: 0 0 25px rgba(0, 255, 170, 0.4);
+  box-shadow: 0 0 15px rgba(0, 255, 170, 0.2);
   animation: glowProfile 4s ease-in-out infinite alternate;
 }
 
 @keyframes glowProfile {
-  0% { box-shadow: 0 0 15px rgba(0, 255, 170, 0.3); }
-  100% { box-shadow: 0 0 35px rgba(0, 255, 170, 0.7); }
+  0% { box-shadow: 0 0 10px rgba(0, 255, 170, 0.15); }
+  100% { box-shadow: 0 0 25px rgba(0, 255, 170, 0.3); }
 }
 
-/* === Aura === */
+/* === Aura subtilă === */
 .aura {
   position: absolute;
   top: 58%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 220px;
-  height: 220px;
+  width: 230px;
+  height: 230px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(0,255,170,0.3), transparent 70%);
-  filter: blur(70px);
-  opacity: 0.9;
-  animation: breathe 6s ease-in-out infinite alternate;
+  background: conic-gradient(
+    from 0deg,
+    rgba(0, 255, 170, 0.25),
+    rgba(0, 190, 255, 0.25),
+    rgba(0, 255, 170, 0.25)
+  );
+  filter: blur(80px);
+  opacity: 0.45;
+  animation: rotateAura 18s linear infinite;
   z-index: 0;
 }
 
-@keyframes breathe {
-  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-  100% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+.energy-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 255, 170, 0.4);
+  transform-origin: center;
+  transform: translate(-50%, -50%) rotate(0deg);
+  filter: drop-shadow(0 0 6px rgba(0, 255, 170, 0.5));
+  animation: orbitEnergy 10s linear infinite;
+  opacity: 0.4;
 }
 
 /* === Text principal === */
 .followers-count {
-  font-size: 6.5rem;
+  font-size: 6rem;
   font-weight: 800;
   color: #ffffff;
   text-shadow:
-    2px 2px 6px rgba(0, 0, 0, 0.8),
-    0 0 40px rgba(0, 255, 170, 0.5);
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 2;
+    1px 1px 2px rgba(0, 0, 0, 0.6),
+    0 0 8px rgba(0, 255, 170, 0.15);
+  transition: transform 0.25s ease;
+  z-index: 3;
+}
+
+.followers-count.zoom {
+  transform: scale(1.05);
 }
 
 .followers-label {
-  font-size: 1.3rem;
-  color: #bbb;
+  font-size: 1.2rem;
+  color: #bdbdbd;
+  z-index: 3;
+}
+
+/* === Fulger === */
+.flash-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 380px;
+  height: 380px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
   z-index: 2;
+  mix-blend-mode: screen;
+  opacity: 0;
+}
+
+.flash-effect.follow {
+  background: radial-gradient(circle, rgba(0,255,170,0.6), transparent 70%);
+  animation: flashFollow 0.6s ease-out;
+}
+
+.flash-effect.unfollow {
+  background: radial-gradient(circle, rgba(255,50,50,0.6), transparent 70%);
+  animation: flashUnfollow 0.6s ease-out;
+}
+
+/* === Arc electric === */
+.electric-arc {
+  position: absolute;
+  top: 54%;
+  left: 50%;
+  width: 200px;
+  height: 6px;
+  background: linear-gradient(90deg, transparent, #00ffaa, transparent);
+  transform: translate(-50%, -50%) rotate(0deg);
+  opacity: 0.8;
+  z-index: 3;
+  animation: electricFlash 0.3s ease-out;
+  filter: drop-shadow(0 0 6px #00ffaa);
+}
+
+@keyframes electricFlash {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scaleX(0.6);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scaleX(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scaleX(0.8);
+  }
 }
 
 /* === Particule === */
@@ -88,7 +161,7 @@
 .particle {
   position: absolute;
   border-radius: 50%;
-  opacity: 0.85;
+  opacity: 0.9;
   animation: fly 1.4s ease-out forwards;
   box-shadow: 0 0 10px rgba(0, 255, 170, 0.4);
 }
@@ -102,4 +175,27 @@
     opacity: 0;
     transform: translate(var(--x, 0), var(--y, -200px)) scale(0.7);
   }
+}
+
+/* === Animații generale === */
+@keyframes rotateAura {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes orbitEnergy {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes flashFollow {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+  30% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
+}
+
+@keyframes flashUnfollow {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+  40% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); }
 }
