@@ -1,30 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import "./Overlay.css";
 
 export default function Overlay() {
   const [followers, setFollowers] = useState(0);
   const [profilePic, setProfilePic] = useState("");
-  const [username, setUsername] = useState("");
   const [latestFollower, setLatestFollower] = useState("loading...");
   const [auraColor, setAuraColor] = useState("rgba(0, 255, 170, 0.25)");
   const params = new URLSearchParams(window.location.search);
   const user = params.get("user") || "hyghman";
 
   // Fetch Kick channel info
-  const fetchFollowers = async () => {
+  const fetchFollowers = useCallback(async () => {
     try {
       const res = await fetch(`https://kick.com/api/v1/channels/${user}`);
       const data = await res.json();
       setFollowers(data.followersCount);
       setProfilePic(data.user.profile_pic);
-      setUsername(data.user.username);
     } catch (err) {
       console.error("Failed to fetch channel data", err);
     }
-  };
+  }, [user]);
 
   // Fetch recent followers
-  const fetchLatestFollower = async () => {
+  const fetchLatestFollower = useCallback(async () => {
     try {
       const res = await fetch(
         `https://kick.com/api/v2/channels/${user}/followers`
@@ -36,24 +34,24 @@ export default function Overlay() {
     } catch (err) {
       console.error("Failed to fetch latest follower", err);
     }
-  };
+  }, [user]);
 
-  // Fetch on load
+  // Fetch on load and refresh every 15s
   useEffect(() => {
     fetchFollowers();
     fetchLatestFollower();
 
-    // Refresh every 15 seconds
     const interval = setInterval(() => {
       fetchFollowers();
       fetchLatestFollower();
     }, 15000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchFollowers, fetchLatestFollower]);
 
-  // Simple aura pulse effect when follower changes
+  // Simple aura pulse effect when follower count changes
   useEffect(() => {
+    if (!followers) return;
     setAuraColor("rgba(0, 255, 170, 0.45)");
     const timer = setTimeout(
       () => setAuraColor("rgba(0, 255, 170, 0.25)"),
