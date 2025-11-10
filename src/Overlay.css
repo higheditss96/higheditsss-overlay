@@ -21,7 +21,7 @@
   z-index: 3;
 }
 
-/* Număr cu drop shadow fin, fără glow */
+/* Număr cu drop shadow subtil */
 .followers-count {
   font-family: "Poppins", sans-serif;
   font-size: 5rem;
@@ -63,21 +63,33 @@
   }
 }
 
-/* AURA EFFECT */
+/* AURA cinematică */
 .aura {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 280px;
-  height: 280px;
+  width: 260px;
+  height: 260px;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   filter: blur(40px);
   z-index: 0;
   transition: background 0.5s ease;
+  animation: auraFloat 5s ease-in-out infinite alternate;
 }
 
-/* BUBBLES */
+@keyframes auraFloat {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -52%) scale(1.07);
+    opacity: 0.75;
+  }
+}
+
+/* BULE */
 .bubble-layer {
   position: fixed;
   top: 0;

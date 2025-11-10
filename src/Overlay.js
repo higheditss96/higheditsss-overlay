@@ -38,11 +38,13 @@ export default function Overlay() {
     if (followers === 0 && previousFollowers === 0) return;
 
     if (followers > previousFollowers) {
+      // FOLLOW -> bule verzi
       setAuraColor(`${customColor}80`);
       spawnBubbles(`${customColor}`);
       triggerFlash("green");
     } else if (followers < previousFollowers) {
-      setAuraColor("rgba(255, 60, 60, 0.5)");
+      // UNFOLLOW -> bule roșii
+      setAuraColor("rgba(255, 60, 60, 0.6)");
       spawnBubbles("rgba(255, 60, 60, 0.9)");
       triggerFlash("red");
     }
@@ -50,7 +52,7 @@ export default function Overlay() {
     const timer = setTimeout(() => setAuraColor(`${customColor}40`), 1200);
     setPreviousFollowers(followers);
     return () => clearTimeout(timer);
-  }, [followers]);
+  }, [followers, previousFollowers, customColor]);
 
   const triggerFlash = (type) => {
     setFlash(type);
@@ -91,8 +93,9 @@ export default function Overlay() {
 
   return (
     <div className="overlay-container" style={{ "--main-color": customColor }}>
+      {/* Cinematic aura */}
       <div
-        className="aura"
+        className={`aura ${flash ? "aura-flash" : ""}`}
         style={{
           background: `radial-gradient(circle, ${
             auraColor || `${customColor}40`
@@ -100,10 +103,12 @@ export default function Overlay() {
         }}
       ></div>
 
+      {/* Profile picture */}
       {profilePic && (
         <img src={profilePic} alt="pfp" className="pfp" draggable="false" />
       )}
 
+      {/* Followers count */}
       <div
         ref={numberRef}
         className={`followers-count ${flash ? `flash-${flash}` : ""}`}
@@ -111,6 +116,7 @@ export default function Overlay() {
         {followers.toLocaleString()}
       </div>
 
+      {/* Bubble layer */}
       <div className="bubble-layer">
         {bubbles.map((b) => (
           <div
