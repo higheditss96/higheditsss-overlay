@@ -39,17 +39,15 @@ export default function Overlay() {
     return () => clearInterval(interval);
   }, [fetchFollowers]);
 
-  // === DETECT FOLLOW / UNFOLLOW ===
+  // === FOLLOW / UNFOLLOW ANIMATION ===
   useEffect(() => {
     if (followers === 0 && previousFollowers === 0) return;
 
     if (followers > previousFollowers) {
-      // follow = verde
       setAuraColor(`${customColor}80`);
-      spawnBubbles(`${customColor}`);
+      spawnBubbles(customColor);
       triggerFlash("green");
     } else if (followers < previousFollowers) {
-      // unfollow = roșu
       setAuraColor("rgba(255, 60, 60, 0.6)");
       spawnBubbles("rgba(255, 60, 60, 0.9)");
       triggerFlash("red");
@@ -60,13 +58,11 @@ export default function Overlay() {
     return () => clearTimeout(timer);
   }, [followers, previousFollowers, customColor]);
 
-  // === FLASH EFFECT ===
   const triggerFlash = (type) => {
     setFlash(type);
     setTimeout(() => setFlash(false), 400);
   };
 
-  // === SPAWN BUBBLES ===
   const spawnBubbles = (color) => {
     if (!numberRef.current) return;
     const rect = numberRef.current.getBoundingClientRect();
@@ -99,7 +95,6 @@ export default function Overlay() {
     }
   };
 
-  // === PROGRESS ===
   const progress = Math.min((followers / goal) * 100, 100);
 
   return (
@@ -107,7 +102,7 @@ export default function Overlay() {
       className="overlay-container"
       style={{ "--main-color": customColor, "--goal-color": customColor }}
     >
-      {/* === AURA === */}
+      {/* AURA */}
       <div
         className={`aura ${flash ? "aura-flash" : ""}`}
         style={{
@@ -117,12 +112,12 @@ export default function Overlay() {
         }}
       ></div>
 
-      {/* === PROFILE PICTURE === */}
+      {/* PROFILE PICTURE */}
       {showProfile && profilePic && (
         <img src={profilePic} alt="pfp" className="pfp" draggable="false" />
       )}
 
-      {/* === FOLLOWER COUNT === */}
+      {/* FOLLOWERS COUNT */}
       <div
         ref={numberRef}
         className={`followers-count ${flash ? `flash-${flash}` : ""} ${
@@ -132,7 +127,7 @@ export default function Overlay() {
         {followers.toLocaleString()}
       </div>
 
-      {/* === GOAL BAR === */}
+      {/* GOAL BAR */}
       {useGoal && (
         <div className="goal-container">
           <div
@@ -148,7 +143,7 @@ export default function Overlay() {
         </div>
       )}
 
-      {/* === BUBBLES === */}
+      {/* BUBBLES */}
       <div className="bubble-layer">
         {bubbles.map((b) => (
           <div
