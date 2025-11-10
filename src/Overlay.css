@@ -1,3 +1,4 @@
+/* === CONTAINER GENERAL === */
 .overlay-container {
   position: relative;
   width: 100vw;
@@ -21,7 +22,7 @@
   z-index: 3;
   opacity: 0;
   animation: fadeInPic 1.2s ease forwards;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6); /* drop shadow subtil */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -56,41 +57,45 @@
   margin-top: -40px;
 }
 
-/* === GOAL BAR === */
+/* === GOAL BAR (FIXED ANIMATIE) === */
 .goal-container {
-  margin-top: 30px;
+  margin-top: 25px;
   width: 420px;
-  height: 32px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.07);
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+  height: 28px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
   overflow: hidden;
   position: relative;
 }
 
 .goal-bar {
-  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
   height: 100%;
-  position: relative;
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.goal-progress {
-  height: 100%;
+  width: 0%;
+  border-radius: 50px;
+  background: var(--goal-color, #00ffaa);
+  transition: width 1.2s ease-in-out;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-weight: 700;
-  font-size: 1.1rem;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
-  transition: width 0.8s ease;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+/* Textul (numerele) în interiorul barei */
 .goal-text {
   position: relative;
-  z-index: 2;
+  z-index: 3;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  font-weight: 600;
+  font-size: 1rem;
+  user-select: none;
 }
 
 /* === AURA CINEMATICĂ === */
@@ -119,7 +124,7 @@
   }
 }
 
-/* === BULE === */
+/* === BULE (FOLLOW/UNFOLLOW) === */
 .bubble-layer {
   position: fixed;
   top: 0;

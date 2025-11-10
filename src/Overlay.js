@@ -21,13 +21,13 @@ export default function Overlay() {
     params.get("useGoal") === "true" || params.get("useGoal") === "yes";
   const goal = parseInt(params.get("goal")) || 10000;
 
-  // === Fetch followers & user ===
+  // === FETCH FOLLOWERS ===
   const fetchFollowers = useCallback(async () => {
     try {
       const res = await fetch(`https://kick.com/api/v1/channels/${user}`);
       const data = await res.json();
       setFollowers(data.followersCount);
-      setProfilePic(data.user.profile_pic);
+      setProfilePic(data.user?.profile_pic || "");
     } catch (err) {
       console.error("Failed to fetch channel data", err);
     }
@@ -39,15 +39,17 @@ export default function Overlay() {
     return () => clearInterval(interval);
   }, [fetchFollowers]);
 
-  // === Detect follow/unfollow + animations ===
+  // === DETECT FOLLOW / UNFOLLOW ===
   useEffect(() => {
     if (followers === 0 && previousFollowers === 0) return;
 
     if (followers > previousFollowers) {
+      // follow = verde
       setAuraColor(`${customColor}80`);
       spawnBubbles(`${customColor}`);
       triggerFlash("green");
     } else if (followers < previousFollowers) {
+      // unfollow = roșu
       setAuraColor("rgba(255, 60, 60, 0.6)");
       spawnBubbles("rgba(255, 60, 60, 0.9)");
       triggerFlash("red");
@@ -58,12 +60,13 @@ export default function Overlay() {
     return () => clearTimeout(timer);
   }, [followers, previousFollowers, customColor]);
 
+  // === FLASH EFFECT ===
   const triggerFlash = (type) => {
     setFlash(type);
     setTimeout(() => setFlash(false), 400);
   };
 
-  // === Bubble spawn ===
+  // === SPAWN BUBBLES ===
   const spawnBubbles = (color) => {
     if (!numberRef.current) return;
     const rect = numberRef.current.getBoundingClientRect();
@@ -89,17 +92,22 @@ export default function Overlay() {
       };
 
       setBubbles((prev) => [...prev, bubble]);
-      setTimeout(() => {
-        setBubbles((prev) => prev.filter((b) => b.id !== id));
-      }, duration * 1000);
+      setTimeout(
+        () => setBubbles((prev) => prev.filter((b) => b.id !== id)),
+        duration * 1000
+      );
     }
   };
 
+  // === PROGRESS PENTRU GOAL ===
   const progress = Math.min((followers / goal) * 100, 100);
 
   return (
-    <div className="overlay-container" style={{ "--main-color": customColor }}>
-      {/* Aura cinematică */}
+    <div
+      className="overlay-container"
+      style={{ "--main-color": customColor, "--goal-color": customColor }}
+    >
+      {/* === AURA === */}
       <div
         className={`aura ${flash ? "aura-flash" : ""}`}
         style={{
@@ -109,12 +117,12 @@ export default function Overlay() {
         }}
       ></div>
 
-      {/* Profile Picture */}
+      {/* === PROFILE PICTURE === */}
       {showProfile && profilePic && (
         <img src={profilePic} alt="pfp" className="pfp" draggable="false" />
       )}
 
-      {/* Followers count */}
+      {/* === FOLLOWER COUNT === */}
       <div
         ref={numberRef}
         className={`followers-count ${flash ? `flash-${flash}` : ""} ${
@@ -124,26 +132,23 @@ export default function Overlay() {
         {followers.toLocaleString()}
       </div>
 
-      {/* GOAL BAR */}
+      {/* === GOAL BAR === */}
       {useGoal && (
         <div className="goal-container">
-          <div className="goal-bar">
-            <div
-              className="goal-progress"
-              style={{
-                width: `${progress}%`,
-                backgroundColor: customColor,
-              }}
-            >
-              <span className="goal-text">
-                {followers.toLocaleString()} / {goal.toLocaleString()}
-              </span>
-            </div>
+          <div
+            className="goal-bar"
+            style={{
+              width: `${progress}%`,
+              backgroundColor: customColor,
+            }}
+          ></div>
+          <div className="goal-text">
+            {followers.toLocaleString()} / {goal.toLocaleString()}
           </div>
         </div>
       )}
 
-      {/* Bubble layer */}
+      {/* === BUBBLE LAYER === */}
       <div className="bubble-layer">
         {bubbles.map((b) => (
           <div
