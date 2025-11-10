@@ -1,141 +1,87 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import "./Overlay.css";
 
-const Overlay = ({ user }) => {
+export default function Overlay() {
   const [followers, setFollowers] = useState(0);
   const [profilePic, setProfilePic] = useState("");
-  const [particles, setParticles] = useState([]);
-  const [flash, setFlash] = useState("");
-  const [arc, setArc] = useState(false);
-  const [sparkles, setSparkles] = useState([]);
-  const prevFollowersRef = useRef(0);
+  const [username, setUsername] = useState("");
+  const [latestFollower, setLatestFollower] = useState("loading...");
+  const [auraColor, setAuraColor] = useState("rgba(0, 255, 170, 0.25)");
+  const params = new URLSearchParams(window.location.search);
+  const user = params.get("user") || "hyghman";
 
-  // === trigger particles (verde / roșu) ===
-  const triggerParticles = useCallback((colorType = "green") => {
-    const color = colorType === "red" ? "#ff5050" : "#00ffaa";
-    const newParticles = Array.from({ length: 25 }, (_, i) => ({
-      id: Date.now() + i,
-      color,
-      size: Math.random() * 14 + 6,
-      startX: Math.random() * 120 - 60,
-      startY: Math.random() * 40 - 20,
-      x: Math.random() * 400 - 200,
-      y: Math.random() * -200 - 50,
-      duration: Math.random() * 1 + 0.7,
-    }));
-    setParticles(newParticles);
-    setTimeout(() => setParticles([]), 1500);
-  }, []);
-
-  // === flash + arc electric ===
-  const triggerFlash = useCallback((type) => {
-    setFlash(type);
-    setArc(true);
-    setTimeout(() => setFlash(""), 700);
-    setTimeout(() => setArc(false), 400);
-  }, []);
-
-  // === scântei în jurul numerelor ===
-  const triggerSparkles = useCallback(() => {
-    const newSparkles = Array.from({ length: 6 }, (_, i) => ({
-      id: Date.now() + i,
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-    }));
-    setSparkles(newSparkles);
-    setTimeout(() => setSparkles([]), 800);
-  }, []);
-
-  // === fetch followers ===
-  const fetchFollowers = useCallback(async () => {
+  // Fetch Kick channel info
+  const fetchFollowers = async () => {
     try {
       const res = await fetch(`https://kick.com/api/v1/channels/${user}`);
       const data = await res.json();
+      setFollowers(data.followersCount);
+      setProfilePic(data.user.profile_pic);
+      setUsername(data.user.username);
+    } catch (err) {
+      console.error("Failed to fetch channel data", err);
+    }
+  };
 
-      if (data?.followersCount !== undefined) {
-        const current = data.followersCount;
-        const prev = prevFollowersRef.current;
-
-        if (current > prev) {
-          triggerParticles("green");
-          triggerFlash("follow");
-          triggerSparkles();
-        } else if (current < prev) {
-          triggerParticles("red"); // 🔴 bule roșii la unfollow
-          triggerFlash("unfollow");
-        }
-
-        setFollowers(current);
-        prevFollowersRef.current = current;
-
-        if (data?.user?.profile_pic) {
-          setProfilePic(data.user.profile_pic);
-        }
+  // Fetch recent followers
+  const fetchLatestFollower = async () => {
+    try {
+      const res = await fetch(
+        `https://kick.com/api/v2/channels/${user}/followers`
+      );
+      const data = await res.json();
+      if (data?.data?.length > 0) {
+        setLatestFollower(data.data[0].username);
       }
     } catch (err) {
-      console.error("Eroare la fetch:", err);
+      console.error("Failed to fetch latest follower", err);
     }
-  }, [user, triggerParticles, triggerFlash, triggerSparkles]);
+  };
 
-  // === useEffect pentru fetch periodic ===
+  // Fetch on load
   useEffect(() => {
     fetchFollowers();
-    const interval = setInterval(fetchFollowers, 8000);
+    fetchLatestFollower();
+
+    // Refresh every 15 seconds
+    const interval = setInterval(() => {
+      fetchFollowers();
+      fetchLatestFollower();
+    }, 15000);
+
     return () => clearInterval(interval);
-  }, [fetchFollowers]);
+  }, []);
+
+  // Simple aura pulse effect when follower changes
+  useEffect(() => {
+    setAuraColor("rgba(0, 255, 170, 0.45)");
+    const timer = setTimeout(
+      () => setAuraColor("rgba(0, 255, 170, 0.25)"),
+      1200
+    );
+    return () => clearTimeout(timer);
+  }, [followers]);
 
   return (
     <div className="overlay-container">
-      <div className="content">
-        {profilePic && <img src={profilePic} alt="pfp" className="profile-pic" />}
+      <div
+        className="aura"
+        style={{
+          background: `radial-gradient(circle, ${auraColor}, transparent 70%)`,
+        }}
+      ></div>
 
-        {/* Aura */}
-        <div className="aura">
-          <div className="energy-ring"></div>
-        </div>
+      {profilePic && (
+        <img src={profilePic} alt="pfp" className="pfp" draggable="false" />
+      )}
 
-        {/* Fulger + Arc */}
-        {flash && <div className={`flash-effect ${flash}`}></div>}
-        {arc && <div className="electric-arc"></div>}
+      <div className="followers-count">
+        {followers.toLocaleString()}
+      </div>
 
-        {/* Particule (bule colorate) */}
-        <div className="particles-container">
-          {particles.map((p) => (
-            <div
-              key={p.id}
-              className="particle"
-              style={{
-                backgroundColor: p.color,
-                width: `${p.size}px`,
-                height: `${p.size}px`,
-                left: `calc(50% + ${p.startX}px)`,
-                top: `calc(55% + ${p.startY}px)`,
-                animationDuration: `${p.duration}s`,
-                "--x": `${p.x}px`,
-                "--y": `${p.y}px`,
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Număr + Sparkles */}
-        <div className="number-wrapper">
-          <h1 className={`followers-count ${flash === "follow" ? "zoom" : ""}`}>
-            {followers.toLocaleString()}
-          </h1>
-          {sparkles.map((s) => (
-            <span
-              key={s.id}
-              className="sparkle"
-              style={{ left: s.left, top: s.top }}
-            ></span>
-          ))}
-        </div>
-
-        <p className="followers-label">@{user}</p>
+      <div className="latest-follower">
+        💚 Last follow: <span>{latestFollower}</span>
       </div>
     </div>
   );
-};
-
-export default Overlay;
+}

@@ -1,201 +1,64 @@
+body {
+  margin: 0;
+  background: transparent;
+  overflow: hidden;
+  font-family: "Poppins", sans-serif;
+}
+
 .overlay-container {
   position: relative;
-  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  height: 100vh;
-  width: 100%;
-  background: transparent;
+  align-items: center;
+  overflow: hidden;
 }
 
-.content {
-  position: relative;
-  text-align: center;
-  font-family: "Poppins", sans-serif;
-  z-index: 2;
-}
-
-/* === Poza de profil === */
-.profile-pic {
+.pfp {
   width: 120px;
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  margin-bottom: 12px;
-  box-shadow: 0 0 15px rgba(0, 255, 170, 0.2);
-  animation: glowProfile 4s ease-in-out infinite alternate;
+  box-shadow: 0 0 25px rgba(0, 255, 170, 0.3);
+  margin-bottom: 20px;
 }
 
-@keyframes glowProfile {
-  0% { box-shadow: 0 0 10px rgba(0, 255, 170, 0.15); }
-  100% { box-shadow: 0 0 25px rgba(0, 255, 170, 0.3); }
+.followers-count {
+  font-size: 90px;
+  font-weight: 800;
+  color: #00ffaa;
+  text-shadow: 0px 2px 8px rgba(0, 0, 0, 0.25);
+  position: relative;
+  z-index: 2;
+  transition: all 0.4s ease;
 }
 
-/* === Aura subtilă === */
 .aura {
   position: absolute;
-  top: 58%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 230px;
-  height: 230px;
+  width: 300px;
+  height: 300px;
   border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    rgba(0, 255, 170, 0.25),
-    rgba(0, 190, 255, 0.25),
-    rgba(0, 255, 170, 0.25)
-  );
-  filter: blur(80px);
-  opacity: 0.45;
-  animation: rotateAura 18s linear infinite;
+  filter: blur(70px);
+  transition: all 0.5s ease;
   z-index: 0;
 }
 
-.energy-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 240px;
-  height: 240px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(0, 255, 170, 0.4);
-  transform-origin: center;
-  transform: translate(-50%, -50%) rotate(0deg);
-  filter: drop-shadow(0 0 6px rgba(0, 255, 170, 0.5));
-  animation: orbitEnergy 10s linear infinite;
-  opacity: 0.4;
+.latest-follower {
+  margin-top: 15px;
+  font-size: 20px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 6px 16px;
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* === Text principal === */
-.followers-count {
-  font-size: 6rem;
-  font-weight: 800;
-  color: #ffffff;
-  text-shadow:
-    1px 1px 2px rgba(0, 0, 0, 0.6),
-    0 0 8px rgba(0, 255, 170, 0.15);
-  transition: transform 0.25s ease;
-  z-index: 3;
-}
-
-.followers-count.zoom {
-  transform: scale(1.05);
-}
-
-.followers-label {
-  font-size: 1.2rem;
-  color: #bdbdbd;
-  z-index: 3;
-}
-
-/* === Fulger === */
-.flash-effect {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 380px;
-  height: 380px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 2;
-  mix-blend-mode: screen;
-  opacity: 0;
-}
-
-.flash-effect.follow {
-  background: radial-gradient(circle, rgba(0,255,170,0.6), transparent 70%);
-  animation: flashFollow 0.6s ease-out;
-}
-
-.flash-effect.unfollow {
-  background: radial-gradient(circle, rgba(255,50,50,0.6), transparent 70%);
-  animation: flashUnfollow 0.6s ease-out;
-}
-
-/* === Arc electric === */
-.electric-arc {
-  position: absolute;
-  top: 54%;
-  left: 50%;
-  width: 200px;
-  height: 6px;
-  background: linear-gradient(90deg, transparent, #00ffaa, transparent);
-  transform: translate(-50%, -50%) rotate(0deg);
-  opacity: 0.8;
-  z-index: 3;
-  animation: electricFlash 0.3s ease-out;
-  filter: drop-shadow(0 0 6px #00ffaa);
-}
-
-@keyframes electricFlash {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scaleX(0.6);
-  }
-  50% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scaleX(1.2);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scaleX(0.8);
-  }
-}
-
-/* === Particule === */
-.particles-container {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.particle {
-  position: absolute;
-  border-radius: 50%;
-  opacity: 0.9;
-  animation: fly 1.4s ease-out forwards;
-  box-shadow: 0 0 10px rgba(0, 255, 170, 0.4);
-}
-
-@keyframes fly {
-  0% {
-    opacity: 1;
-    transform: translate(0, 0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--x, 0), var(--y, -200px)) scale(0.7);
-  }
-}
-
-/* === Animații generale === */
-@keyframes rotateAura {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-@keyframes orbitEnergy {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-@keyframes flashFollow {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-  30% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
-}
-
-@keyframes flashUnfollow {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-  40% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); }
+.latest-follower span {
+  color: #00ffaa;
+  font-weight: 600;
 }
