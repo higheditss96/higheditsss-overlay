@@ -14,6 +14,9 @@ export default function Overlay() {
   const params = new URLSearchParams(window.location.search);
   const user = params.get("user") || "hyghman";
   const customColor = decodeURIComponent(params.get("color") || "#00ffaa");
+  const showProfile =
+    params.get("showProfilePicture") === "true" ||
+    params.get("showProfilePicture") === "yes";
 
   // === Fetch followers & user ===
   const fetchFollowers = useCallback(async () => {
@@ -93,7 +96,7 @@ export default function Overlay() {
 
   return (
     <div className="overlay-container" style={{ "--main-color": customColor }}>
-      {/* Cinematic aura */}
+      {/* Aura cinematică */}
       <div
         className={`aura ${flash ? "aura-flash" : ""}`}
         style={{
@@ -103,8 +106,8 @@ export default function Overlay() {
         }}
       ></div>
 
-      {/* Profile picture */}
-      {profilePic && (
+      {/* Profile picture — doar dacă e activată */}
+      {showProfile && profilePic && (
         <img src={profilePic} alt="pfp" className="pfp" draggable="false" />
       )}
 
