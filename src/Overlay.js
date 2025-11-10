@@ -99,7 +99,7 @@ export default function Overlay() {
     }
   };
 
-  // === PROGRESS PENTRU GOAL ===
+  // === PROGRESS ===
   const progress = Math.min((followers / goal) * 100, 100);
 
   return (
@@ -148,7 +148,7 @@ export default function Overlay() {
         </div>
       )}
 
-      {/* === BUBBLE LAYER === */}
+      {/* === BUBBLES === */}
       <div className="bubble-layer">
         {bubbles.map((b) => (
           <div

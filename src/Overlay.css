@@ -57,11 +57,11 @@
   margin-top: -40px;
 }
 
-/* === GOAL BAR (FIXED ANIMATIE) === */
+/* === GOAL BAR (TEXT CENTRAT MARE) === */
 .goal-container {
   margin-top: 25px;
   width: 420px;
-  height: 28px;
+  height: 34px;
   border-radius: 50px;
   background: rgba(255, 255, 255, 0.1);
   box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
@@ -78,24 +78,22 @@
   border-radius: 50px;
   background: var(--goal-color, #00ffaa);
   transition: width 1.2s ease-in-out;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 1rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-/* Textul (numerele) în interiorul barei */
+/* TEXT PERFECT CENTRAT PESTE BARĂ */
 .goal-text {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #ffffff;
+  font-size: 1.5rem; /* text mai mare */
+  font-weight: 800;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  letter-spacing: 0.5px;
   z-index: 3;
-  color: #fff;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
-  font-weight: 600;
-  font-size: 1rem;
   user-select: none;
+  white-space: nowrap;
 }
 
 /* === AURA CINEMATICĂ === */
