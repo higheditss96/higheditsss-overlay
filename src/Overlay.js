@@ -8,6 +8,7 @@ export default function Overlay() {
   const [auraColor, setAuraColor] = useState("");
   const [bubbles, setBubbles] = useState([]);
   const [flash, setFlash] = useState(false);
+  const [lastFollower, setLastFollower] = useState(null);
   const numberRef = useRef(null);
 
   // === URL PARAMS ===
@@ -28,6 +29,15 @@ export default function Overlay() {
       const data = await res.json();
       setFollowers(data.followersCount);
       setProfilePic(data.user?.profile_pic || "");
+
+      // Fetch last follower
+      const res2 = await fetch(
+        `https://kick.com/api/v1/channels/${user}/followers?limit=1`
+      );
+      const data2 = await res2.json();
+      if (Array.isArray(data2) && data2.length > 0) {
+        setLastFollower(data2[0]);
+      }
     } catch (err) {
       console.error("Failed to fetch channel data", err);
     }
@@ -44,16 +54,16 @@ export default function Overlay() {
     if (followers === 0 && previousFollowers === 0) return;
 
     if (followers > previousFollowers) {
-      setAuraColor(`${customColor}80`);
+      setAuraColor(`${customColor}50`);
       spawnBubbles(customColor);
       triggerFlash("green");
     } else if (followers < previousFollowers) {
-      setAuraColor("rgba(255, 60, 60, 0.6)");
-      spawnBubbles("rgba(255, 60, 60, 0.9)");
+      setAuraColor("rgba(255, 60, 60, 0.4)");
+      spawnBubbles("rgba(255, 60, 60, 0.8)");
       triggerFlash("red");
     }
 
-    const timer = setTimeout(() => setAuraColor(`${customColor}40`), 1200);
+    const timer = setTimeout(() => setAuraColor(`${customColor}30`), 1200);
     setPreviousFollowers(followers);
     return () => clearTimeout(timer);
   }, [followers, previousFollowers, customColor]);
@@ -102,22 +112,22 @@ export default function Overlay() {
       className="overlay-container"
       style={{ "--main-color": customColor, "--goal-color": customColor }}
     >
-      {/* AURA */}
+      {/* AURA (subtilă, fără glow) */}
       <div
         className={`aura ${flash ? "aura-flash" : ""}`}
         style={{
           background: `radial-gradient(circle, ${
-            auraColor || `${customColor}40`
+            auraColor || `${customColor}30`
           }, transparent 70%)`,
         }}
       ></div>
 
-      {/* PROFILE PICTURE */}
+      {/* PROFILE PIC */}
       {showProfile && profilePic && (
         <img src={profilePic} alt="pfp" className="pfp" draggable="false" />
       )}
 
-      {/* FOLLOWERS COUNT */}
+      {/* FOLLOWER COUNT */}
       <div
         ref={numberRef}
         className={`followers-count ${flash ? `flash-${flash}` : ""} ${
@@ -143,7 +153,22 @@ export default function Overlay() {
         </div>
       )}
 
-      {/* BUBBLES */}
+      {/* LAST FOLLOWER */}
+      {lastFollower && (
+        <div className="last-follower">
+          <span>Last Follow:</span>
+          {lastFollower.user?.profile_pic && (
+            <img
+              src={lastFollower.user.profile_pic}
+              alt="last follower"
+              className="last-follower-pfp"
+            />
+          )}
+          <strong>{lastFollower.user?.username}</strong>
+        </div>
+      )}
+
+      {/* BUBBLE LAYER */}
       <div className="bubble-layer">
         {bubbles.map((b) => (
           <div

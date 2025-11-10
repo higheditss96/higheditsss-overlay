@@ -22,13 +22,13 @@
   z-index: 3;
   opacity: 0;
   animation: fadeInPic 1.2s ease forwards;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6); /* doar drop shadow */
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .pfp:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.7);
 }
 
 @keyframes fadeInPic {
@@ -48,7 +48,7 @@
   font-size: 4.2rem;
   font-weight: 700;
   color: var(--main-color);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* doar umbră fină */
   z-index: 3;
   transition: transform 0.2s ease, text-shadow 0.3s ease;
   margin-bottom: 8px;
@@ -58,13 +58,13 @@
   margin-top: -20px;
 }
 
-/* === GOAL BAR (COMPACT + TEXT CENTRAT) === */
+/* === GOAL BAR === */
 .goal-container {
   width: 360px;
   height: 30px;
   border-radius: 50px;
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
   overflow: hidden;
   position: relative;
 }
@@ -80,7 +80,7 @@
   transition: width 1s ease-in-out;
 }
 
-/* TEXT MARE, PERFECT CENTRAT */
+/* Textul (numerele) centrat */
 .goal-text {
   position: absolute;
   top: 50%;
@@ -89,8 +89,7 @@
   color: #ffffff;
   font-size: 1.3rem;
   font-weight: 700;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
-  letter-spacing: 0.3px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* doar drop shadow */
   z-index: 3;
   user-select: none;
   white-space: nowrap;
@@ -101,25 +100,46 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 240px;
-  height: 240px;
+  width: 220px;
+  height: 220px;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  filter: blur(40px);
+  filter: blur(30px);
   z-index: 0;
+  opacity: 0.2; /* foarte subtil */
   transition: background 0.5s ease;
-  animation: auraFloat 5s ease-in-out infinite alternate;
+  animation: auraFloat 6s ease-in-out infinite alternate;
 }
 
 @keyframes auraFloat {
   0% {
     transform: translate(-50%, -50%) scale(1);
-    opacity: 0.9;
   }
   100% {
-    transform: translate(-50%, -52%) scale(1.07);
-    opacity: 0.75;
+    transform: translate(-50%, -52%) scale(1.05);
   }
+}
+
+/* === LAST FOLLOWER === */
+.last-follower {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  font-family: "Poppins", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 500;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  z-index: 5;
+}
+
+.last-follower-pfp {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
 }
 
 /* === BULE === */
