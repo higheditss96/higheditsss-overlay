@@ -1,170 +1,120 @@
 import React, { useEffect, useState } from "react";
+import "./Overlay.css";
 
-function Overlay() {
+const Overlay = ({ user }) => {
   const [followers, setFollowers] = useState(0);
-  const [profilePic, setProfilePic] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [pulse, setPulse] = useState("");
+  const [particles, setParticles] = useState([]);
+  const [idleParticles, setIdleParticles] = useState([]);
 
-  // URL params
-  const urlParams = new URLSearchParams(window.location.search);
-  const username = urlParams.get("user") || "hyghman";
-  const color = urlParams.get("color") || "#00ffaa";
-  const font = urlParams.get("font") || "Poppins";
-  const useGoal = urlParams.get("useGoal") === "true";
-  const goal = parseInt(urlParams.get("goal") || "10000", 10);
-  const showPfp = urlParams.get("showPfp") === "true";
-  const goalColor = urlParams.get("goalColor") || "#ffffff";
+  // Fetch followers
+  const fetchFollowers = async () => {
+    try {
+      const res = await fetch(`https://kick.com/api/v1/channels/${user}`);
+      const data = await res.json();
+
+      if (data?.followersCount !== undefined) {
+        const current = data.followersCount;
+
+        if (current > followers) {
+          triggerParticles("green");
+          setPulse("pulse-green");
+        } else if (current < followers) {
+          triggerParticles("red");
+          setPulse("pulse-red");
+        }
+
+        setFollowers(current);
+        setTimeout(() => setPulse(""), 1000);
+      }
+    } catch (err) {
+      console.error("Eroare la fetch:", err);
+    }
+  };
+
+  // Particule explozive
+  const triggerParticles = (color) => {
+    const newParticles = Array.from({ length: 15 }, (_, i) => ({
+      id: Date.now() + i,
+      color,
+      angle: Math.random() * 360,
+      size: Math.random() * 25 + 15, // bule mai mari
+      duration: Math.random() * 1 + 0.8,
+    }));
+    setParticles((prev) => [...prev, ...newParticles]);
+    setTimeout(() => {
+      setParticles((prev) => prev.slice(newParticles.length));
+    }, 1500);
+  };
+
+  // Bule idle (lente)
+  const createIdleParticle = () => {
+    const newParticle = {
+      id: Date.now(),
+      size: Math.random() * 18 + 12,
+      left: 48 + Math.random() * 4, // ies aproape din centrul textului
+      duration: Math.random() * 8 + 5,
+      delay: Math.random() * 3,
+    };
+    setIdleParticles((prev) => [...prev, newParticle]);
+    setTimeout(() => {
+      setIdleParticles((prev) => prev.filter((p) => p.id !== newParticle.id));
+    }, (newParticle.duration + 1) * 1000);
+  };
 
   useEffect(() => {
-    let active = true;
-
-    async function fetchKickUser() {
-      try {
-        const res = await fetch(`https://kick.com/api/v1/channels/${username}`);
-        if (!res.ok) throw new Error("Fetch failed");
-        const data = await res.json();
-
-        if (active && data && data.followersCount && data.user?.profile_pic) {
-          setFollowers(data.followersCount);
-          setProfilePic(data.user.profile_pic);
-        } else if (active) {
-          setFollowers(0);
-          setProfilePic("");
-        }
-      } catch (err) {
-        console.error("Kick API error:", err);
-        if (active) {
-          setFollowers(0);
-          setProfilePic("");
-        }
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-
-    fetchKickUser();
-    const interval = setInterval(fetchKickUser, 60000);
-
+    fetchFollowers();
+    const interval = setInterval(fetchFollowers, 10000);
+    const idleInterval = setInterval(createIdleParticle, 1200);
     return () => {
-      active = false;
       clearInterval(interval);
+      clearInterval(idleInterval);
     };
-  }, [username]);
-
-  if (loading) {
-    return (
-      <div
-        style={{
-          background: "transparent",
-          fontFamily: font,
-          color,
-          textAlign: "center",
-          fontSize: "32px",
-          paddingTop: "20vh",
-        }}
-      >
-        Loading...
-      </div>
-    );
-  }
-
-  const remaining = Math.max(goal - followers, 0);
-  const progress = Math.min((followers / goal) * 100, 100);
-  const goalReached = remaining <= 0;
+  }, [user]);
 
   return (
-    <div
-      style={{
-        background: "transparent",
-        color,
-        fontFamily: font,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        width: "100%",
-        textAlign: "center",
-        overflow: "hidden",
-      }}
-    >
-      {/* Profile Picture */}
-      {showPfp && profilePic ? (
-        <img
-          src={profilePic}
-          alt="profile"
-          style={{
-            width: "120px",
-            height: "120px",
-            borderRadius: "50%",
-            marginBottom: "15px",
-            objectFit: "cover",
-          }}
-        />
-      ) : null}
-
-      {/* Followers Counter */}
-      <div
-        style={{
-          fontSize: "72px",
-          fontWeight: "700",
-          color,
-          lineHeight: "1.1",
-          marginBottom: useGoal ? "15px" : "0",
-        }}
-      >
-        {followers.toLocaleString()}
-      </div>
-
-      {/* GOAL BAR */}
-      {useGoal && (
-        <div
-          style={{
-            position: "relative",
-            width: "35%", // bara scurtă
-            height: "45px", // mai groasă
-            background: "#1a1a1a",
-            borderRadius: "12px",
-            overflow: "hidden",
-            border: `2px solid ${goalColor}`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: font,
-            fontWeight: "700",
-            fontSize: "20px", // text mare
-            color: "#000", // text negru fix
-          }}
-        >
-          {/* Progress bar */}
-          <div
-            style={{
-              height: "100%",
-              width: `${progress}%`,
-              background: color,
-              transition: "width 0.8s ease",
-              position: "absolute",
-              left: 0,
-              top: 0,
-            }}
-          />
-
-          {/* Text inside bar */}
-          <span
-            style={{
-              zIndex: 2,
-              textAlign: "center",
-              width: "100%",
-            }}
-          >
-            {goalReached
-              ? "Goal reached!"
-              : `${remaining.toLocaleString()} left`}
-          </span>
+    <div className="overlay-container">
+      <div className="content">
+        {/* bule lente */}
+        <div className="idle-bubbles">
+          {idleParticles.map((b) => (
+            <div
+              key={b.id}
+              className="idle-bubble"
+              style={{
+                left: `${b.left}%`,
+                width: `${b.size}px`,
+                height: `${b.size}px`,
+                animationDuration: `${b.duration}s`,
+                animationDelay: `${b.delay}s`,
+              }}
+            />
+          ))}
         </div>
-      )}
+
+        {/* particule rapide */}
+        <div className="particles-container">
+          {particles.map((p) => (
+            <div
+              key={p.id}
+              className="particle"
+              style={{
+                backgroundColor: p.color === "green" ? "#00ffaa" : "#ff5050",
+                width: `${p.size}px`,
+                height: `${p.size}px`,
+                animationDuration: `${p.duration}s`,
+              }}
+            />
+          ))}
+        </div>
+
+        <h1 className={`followers-count ${pulse}`}>
+          {followers.toLocaleString()}
+        </h1>
+        <p className="followers-label">@{user} followers</p>
+      </div>
     </div>
   );
-}
+};
 
 export default Overlay;
