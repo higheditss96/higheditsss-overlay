@@ -13,46 +13,74 @@
 .content {
   position: relative;
   text-align: center;
-  z-index: 2;
   font-family: "Poppins", sans-serif;
+  z-index: 2;
 }
 
+/* === Poza de profil === */
+.profile-pic {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 12px;
+  box-shadow: 0 0 25px rgba(0, 255, 170, 0.4);
+  animation: glowProfile 4s ease-in-out infinite alternate;
+}
+
+@keyframes glowProfile {
+  0% { box-shadow: 0 0 15px rgba(0, 255, 170, 0.3); }
+  100% { box-shadow: 0 0 35px rgba(0, 255, 170, 0.7); }
+}
+
+/* === Aura === */
+.aura {
+  position: absolute;
+  top: 58%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,255,170,0.3), transparent 70%);
+  filter: blur(70px);
+  opacity: 0.9;
+  animation: breathe 6s ease-in-out infinite alternate;
+  z-index: 0;
+}
+
+@keyframes breathe {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+  100% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+}
+
+/* === Text principal === */
 .followers-count {
-  font-size: 8rem;
+  font-size: 6.5rem;
   font-weight: 800;
-  text-shadow: 0 0 25px rgba(0, 255, 170, 0.6);
+  color: #ffffff;
+  text-shadow:
+    2px 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(0, 255, 170, 0.5);
   transition: all 0.3s ease;
   position: relative;
-  color: #00ffaa;
+  z-index: 2;
 }
 
 .followers-label {
-  font-size: 1.5rem;
-  color: #ccc;
+  font-size: 1.3rem;
+  color: #bbb;
+  z-index: 2;
 }
 
-/* Pulse */
-@keyframes pulseGreen {
-  0% { transform: scale(1); text-shadow: 0 0 25px #00ffaa; }
-  50% { transform: scale(1.15); text-shadow: 0 0 80px #00ffaa; }
-  100% { transform: scale(1); text-shadow: 0 0 25px #00ffaa; }
-}
-
-@keyframes pulseRed {
-  0% { transform: scale(1); color: #ff5050; text-shadow: 0 0 25px #ff5050; }
-  50% { transform: scale(1.15); text-shadow: 0 0 80px #ff5050; }
-  100% { transform: scale(1); color: #00ffaa; text-shadow: 0 0 25px #00ffaa; }
-}
-
-.pulse-green { animation: pulseGreen 0.8s ease; }
-.pulse-red { animation: pulseRed 0.8s ease; }
-
-/* Explosive particles */
+/* === Particule === */
 .particles-container {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  overflow: hidden;
   pointer-events: none;
   z-index: 1;
 }
@@ -60,57 +88,18 @@
 .particle {
   position: absolute;
   border-radius: 50%;
-  opacity: 0.9;
-  animation: explode 1.2s ease-out forwards;
-  box-shadow: 0 0 20px rgba(0, 255, 170, 0.6);
+  opacity: 0.85;
+  animation: fly 1.4s ease-out forwards;
+  box-shadow: 0 0 10px rgba(0, 255, 170, 0.4);
 }
 
-@keyframes explode {
+@keyframes fly {
   0% {
-    transform: translate(0, 0) scale(1);
     opacity: 1;
+    transform: translate(0, 0) scale(1);
   }
   100% {
-    transform: translate(
-      calc(80px - 160px * random()),
-      calc(-120px - 100px * random())
-    ) scale(0.8);
     opacity: 0;
-  }
-}
-
-/* Idle bubbles */
-.idle-bubbles {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  z-index: 0;
-}
-
-.idle-bubble {
-  position: absolute;
-  bottom: 45%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 255, 170, 0.2);
-  border-radius: 50%;
-  box-shadow: 0 0 10px rgba(0, 255, 170, 0.3);
-  animation: floatUp linear infinite;
-}
-
-@keyframes floatUp {
-  0% {
-    transform: translate(-50%, 0) scale(0.7);
-    opacity: 0.4;
-  }
-  30% {
-    opacity: 0.7;
-  }
-  100% {
-    transform: translate(-50%, -200px) scale(1.1);
-    opacity: 0;
+    transform: translate(var(--x, 0), var(--y, -200px)) scale(0.7);
   }
 }

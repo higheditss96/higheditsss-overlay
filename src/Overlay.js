@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "./Overlay.css";
 
 const Overlay = ({ user }) => {
   const [followers, setFollowers] = useState(0);
-  const [pulse, setPulse] = useState("");
+  const [profilePic, setProfilePic] = useState("");
   const [particles, setParticles] = useState([]);
-  const [idleParticles, setIdleParticles] = useState([]);
+  const auraRef = useRef(null);
 
-  // Fetch followers
+  // === FETCH FOLLOWERS ===
   const fetchFollowers = async () => {
     try {
       const res = await fetch(`https://kick.com/api/v1/channels/${user}`);
@@ -16,102 +16,71 @@ const Overlay = ({ user }) => {
       if (data?.followersCount !== undefined) {
         const current = data.followersCount;
 
-        if (current > followers) {
-          triggerParticles("green");
-          setPulse("pulse-green");
-        } else if (current < followers) {
-          triggerParticles("red");
-          setPulse("pulse-red");
-        }
+        if (current > followers) triggerParticles("green");
+        else if (current < followers) triggerParticles("red");
 
         setFollowers(current);
-        setTimeout(() => setPulse(""), 1000);
+        setProfilePic(data.user.profile_pic || "");
       }
     } catch (err) {
       console.error("Eroare la fetch:", err);
     }
   };
 
-  // Particule explozive
-  const triggerParticles = (color) => {
-    const newParticles = Array.from({ length: 15 }, (_, i) => ({
+  // === PARTICULE la FOLLOW / UNFOLLOW ===
+  const triggerParticles = (type) => {
+    const color = type === "green" ? "#00ffaa" : "#ff5050";
+    const newParticles = Array.from({ length: 25 }, (_, i) => ({
       id: Date.now() + i,
       color,
-      angle: Math.random() * 360,
-      size: Math.random() * 25 + 15, // bule mai mari
+      size: Math.random() * 20 + 10,
+      startX: Math.random() * 140 - 70, // pornire aleatorie
+      startY: Math.random() * 60 - 30,
+      x: Math.random() * 500 - 250, // dispersie
+      y: Math.random() * -300 - 50,
       duration: Math.random() * 1 + 0.8,
     }));
-    setParticles((prev) => [...prev, ...newParticles]);
-    setTimeout(() => {
-      setParticles((prev) => prev.slice(newParticles.length));
-    }, 1500);
-  };
+    setParticles(newParticles);
 
-  // Bule idle (lente)
-  const createIdleParticle = () => {
-    const newParticle = {
-      id: Date.now(),
-      size: Math.random() * 18 + 12,
-      left: 48 + Math.random() * 4, // ies aproape din centrul textului
-      duration: Math.random() * 8 + 5,
-      delay: Math.random() * 3,
-    };
-    setIdleParticles((prev) => [...prev, newParticle]);
-    setTimeout(() => {
-      setIdleParticles((prev) => prev.filter((p) => p.id !== newParticle.id));
-    }, (newParticle.duration + 1) * 1000);
+    // curăță după 2s
+    setTimeout(() => setParticles([]), 2000);
   };
 
   useEffect(() => {
     fetchFollowers();
-    const interval = setInterval(fetchFollowers, 10000);
-    const idleInterval = setInterval(createIdleParticle, 1200);
-    return () => {
-      clearInterval(interval);
-      clearInterval(idleInterval);
-    };
+    const interval = setInterval(fetchFollowers, 8000);
+    return () => clearInterval(interval);
   }, [user]);
 
   return (
     <div className="overlay-container">
       <div className="content">
-        {/* bule lente */}
-        <div className="idle-bubbles">
-          {idleParticles.map((b) => (
-            <div
-              key={b.id}
-              className="idle-bubble"
-              style={{
-                left: `${b.left}%`,
-                width: `${b.size}px`,
-                height: `${b.size}px`,
-                animationDuration: `${b.duration}s`,
-                animationDelay: `${b.delay}s`,
-              }}
-            />
-          ))}
-        </div>
+        {profilePic && <img src={profilePic} alt="pfp" className="profile-pic" />}
 
-        {/* particule rapide */}
+        <div className="aura" ref={auraRef}></div>
+
+        {/* === PARTICULE === */}
         <div className="particles-container">
           {particles.map((p) => (
             <div
               key={p.id}
               className="particle"
               style={{
-                backgroundColor: p.color === "green" ? "#00ffaa" : "#ff5050",
+                backgroundColor: p.color,
                 width: `${p.size}px`,
                 height: `${p.size}px`,
+                left: `calc(50% + ${p.startX}px)`,
+                top: `calc(55% + ${p.startY}px)`,
                 animationDuration: `${p.duration}s`,
+                "--x": `${p.x}px`,
+                "--y": `${p.y}px`,
               }}
             />
           ))}
         </div>
 
-        <h1 className={`followers-count ${pulse}`}>
-          {followers.toLocaleString()}
-        </h1>
-        <p className="followers-label">@{user} followers</p>
+        <h1 className="followers-count">{followers.toLocaleString()}</h1>
+        <p className="followers-label">@{user}</p>
       </div>
     </div>
   );
