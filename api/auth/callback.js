@@ -1,14 +1,17 @@
 export default async function handler(req, res) {
-  const { code } = req.query;
+  const code = req.query.code;
 
   if (!code) {
-    return res.status(400).json({ error: "Missing authorization code" });
+    return res.status(400).json({ error: "Missing ?code parameter in callback URL" });
   }
 
   try {
-    const tokenResponse = await fetch("https://kick.com/oauth/token", {
+    // 1️⃣ Trimitem codul primit către Kick ca să obținem tokenul de acces
+    const response = await fetch("https://kick.com/oauth/token", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         grant_type: "authorization_code",
         client_id: process.env.KICK_CLIENT_ID,
@@ -18,28 +21,25 @@ export default async function handler(req, res) {
       }),
     });
 
-    const tokenData = await tokenResponse.json();
+    const data = await response.json();
 
-    if (!tokenResponse.ok) {
-      console.error("Token error:", tokenData);
-      return res.status(500).json({ error: "Failed to get access token" });
+    // 2️⃣ Verificăm dacă Kick a returnat un token valid
+    if (!response.ok) {
+      console.error("Kick OAuth error:", data);
+      return res.status(500).json({ error: "Failed to get token from Kick", details: data });
     }
 
-    const userResponse = await fetch("https://kick.com/api/v1/user", {
-      headers: {
-        Authorization: `Bearer ${tokenData.access_token}`,
-      },
-    });
-
-    const userData = await userResponse.json();
-
+    // 3️⃣ Returnăm tokenul (temporar doar pentru testare)
+    // 💡 Într-o versiune finală îl vei salva într-un cookie sau DB
     return res.status(200).json({
-      success: true,
-      user: userData,
-      access_token: tokenData.access_token,
+      message: "Kick OAuth successful 🎉",
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_in: data.expires_in,
+      token_type: data.token_type,
     });
   } catch (error) {
-    console.error("Callback error:", error);
-    return res.status(500).json({ error: "Server error" });
+    console.error("OAuth callback error:", error);
+    return res.status(500).json({ error: "Unexpected error", details: error.message });
   }
 }
