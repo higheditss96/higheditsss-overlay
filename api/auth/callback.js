@@ -6,38 +6,52 @@ export default async function handler(req, res) {
   }
 
   try {
-    const tokenUrl = "https://kick.com/oauth/token";
-
-    const body = new URLSearchParams({
-      grant_type: "authorization_code",
-      client_id: process.env.KICK_CLIENT_ID,
-      client_secret: process.env.KICK_CLIENT_SECRET,
-      redirect_uri: process.env.KICK_REDIRECT_URI,
-      code,
-    });
-
-    const response = await fetch(tokenUrl, {
+    // Trimite cererea către Kick OAuth pentru a obține tokenul
+    const tokenResponse = await fetch("https://kick.com/oauth/token", {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        grant_type: "authorization_code",
+        client_id: process.env.KICK_CLIENT_ID,
+        client_secret: process.env.KICK_CLIENT_SECRET,
+        redirect_uri: process.env.KICK_REDIRECT_URI,
+        code,
+      }),
     });
 
-    const data = await response.json();
-
-    if (data.error) {
-      return res.status(400).json({ error: data.error_description || "OAuth error", details: data });
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error("Kick token exchange failed:", errorText);
+      return res.status(500).json({ error: "Failed to exchange code for token" });
     }
 
-    // ✅ Token primit — Kick a autentificat utilizatorul
-    return res.status(200).json({
-      success: true,
-      message: "Kick OAuth successful",
-      access_token: data.access_token,
-      refresh_token: data.refresh_token,
-      expires_in: data.expires_in,
+    const tokenData = await tokenResponse.json();
+
+    // Obține datele utilizatorului
+    const userResponse = await fetch("https://kick.com/api/v2/user", {
+      headers: {
+        Authorization: `Bearer ${tokenData.access_token}`,
+      },
+    });
+
+    if (!userResponse.ok) {
+      const errorText = await userResponse.text();
+      console.error("Kick user info request failed:", errorText);
+      return res.status(500).json({ error: "Failed to get user info from Kick" });
+    }
+
+    const userData = await userResponse.json();
+
+    // Returnează info simplă în browser
+    res.status(200).json({
+      message: "Kick OAuth successful!",
+      access_token: tokenData.access_token,
+      user: userData,
     });
   } catch (err) {
-    console.error("Kick OAuth callback error:", err);
-    res.status(500).json({ error: "Kick OAuth callback failed", details: err.message });
+    console.error("Kick callback error:", err);
+    res.status(500).json({ error: "Kick callback failed" });
   }
 }
