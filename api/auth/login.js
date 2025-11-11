@@ -12,16 +12,10 @@ export default async function handler(req, res) {
 
     const finalUrl = `${baseUrl}?${params.toString()}`;
 
-    // 🧩 DEBUG: vezi exact ce URL construiește
-    return res.status(200).json({
-      debug: "Redirecting to Kick OAuth",
-      finalUrl,
-      clientId: process.env.KICK_CLIENT_ID,
-      redirectUri: process.env.KICK_REDIRECT_URI,
-    });
-
+    // 🔥 Redirecționează direct către Kick
+    return res.redirect(finalUrl);
   } catch (err) {
     console.error("Login redirect error:", err);
-    return res.status(500).json({ error: "Failed to create Kick auth URL" });
+    return res.status(500).json({ error: "Failed to redirect to Kick" });
   }
 }
