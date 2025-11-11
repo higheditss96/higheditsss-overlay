@@ -1,9 +1,21 @@
 export default async function handler(req, res) {
-  const authUrl = new URL("https://kick.com/oauth/authorize");
-  authUrl.searchParams.set("response_type", "code");
-  authUrl.searchParams.set("client_id", process.env.KICK_CLIENT_ID);
-  authUrl.searchParams.set("redirect_uri", process.env.KICK_REDIRECT_URI);
-  authUrl.searchParams.set("scope", "user.read channel.read followers.read");
+  try {
+    const baseUrl = "https://kick.com/oauth/authorize";
 
-  return res.redirect(authUrl.toString());
+    const params = new URLSearchParams({
+      response_type: "code",
+      client_id: process.env.KICK_CLIENT_ID,
+      redirect_uri: process.env.KICK_REDIRECT_URI,
+      scope: "user.read channel.read followers.read",
+      force_verify: "true", // ca să te întrebe mereu dacă autorizezi
+    });
+
+    const finalUrl = `${baseUrl}?${params.toString()}`;
+    console.log("Redirecting to:", finalUrl); // debug
+
+    return res.redirect(finalUrl);
+  } catch (err) {
+    console.error("Login redirect error:", err);
+    return res.status(500).json({ error: "Failed to create Kick auth URL" });
+  }
 }
