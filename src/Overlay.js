@@ -21,31 +21,47 @@ export default function Overlay() {
   const useGoal =
     params.get("useGoal") === "true" || params.get("useGoal") === "yes";
   const goal = parseInt(params.get("goal")) || 10000;
+  const useMock = params.get("mock") === "true";
 
-  // === FETCH FOLLOWERS ===
+  // === FETCH FOLLOWERS & LAST FOLLOWER ===
   const fetchFollowers = useCallback(async () => {
     try {
-      const res = await fetch(`https://kick.com/api/v1/channels/${user}`);
-      const data = await res.json();
-      setFollowers(data.followersCount);
-      setProfilePic(data.user?.profile_pic || "");
+      // 1️⃣ Kick API v2 — followers total
+      const channelRes = await fetch(`https://kick.com/api/v2/channels/${user}`);
+      const channelData = await channelRes.json();
 
-      // Fetch last follower
-      const res2 = await fetch(
-        `https://kick.com/api/v1/channels/${user}/followers?limit=1`
-      );
-      const data2 = await res2.json();
-      if (Array.isArray(data2) && data2.length > 0) {
-        setLastFollower(data2[0]);
+      const followersCount =
+        channelData?.followers_count ||
+        channelData?.followersCount ||
+        channelData?.follower_count ||
+        0;
+
+      setFollowers(followersCount);
+      setProfilePic(channelData?.user?.profile_pic || "");
+
+      // 2️⃣ Fetch last follower (real sau mock)
+      const endpoint = useMock
+        ? "/api/mock-followers"
+        : `/api/last-follower?user=${user}`;
+
+      const followersRes = await fetch(endpoint);
+      const followersData = await followersRes.json();
+
+      if (Array.isArray(followersData) && followersData.length > 0) {
+        const newFollower = followersData[0].user;
+        if (newFollower.username !== lastFollower?.username) {
+          setLastFollower(newFollower);
+        }
       }
     } catch (err) {
-      console.error("Failed to fetch channel data", err);
+      console.error("❌ Kick API fetch failed:", err);
     }
-  }, [user]);
+  }, [user, lastFollower, useMock]);
 
+  // === INTERVAL UPDATE ===
   useEffect(() => {
     fetchFollowers();
-    const interval = setInterval(fetchFollowers, 10000);
+    const interval = setInterval(fetchFollowers, 8000); // update la 8 secunde
     return () => clearInterval(interval);
   }, [fetchFollowers]);
 
@@ -112,7 +128,7 @@ export default function Overlay() {
       className="overlay-container"
       style={{ "--main-color": customColor, "--goal-color": customColor }}
     >
-      {/* AURA (subtilă, fără glow) */}
+      {/* AURA */}
       <div
         className={`aura ${flash ? "aura-flash" : ""}`}
         style={{
@@ -157,14 +173,15 @@ export default function Overlay() {
       {lastFollower && (
         <div className="last-follower">
           <span>Last Follow:</span>
-          {lastFollower.user?.profile_pic && (
+          {lastFollower.profile_pic && (
             <img
-              src={lastFollower.user.profile_pic}
+              src={lastFollower.profile_pic}
               alt="last follower"
               className="last-follower-pfp"
+              draggable="false"
             />
           )}
-          <strong>{lastFollower.user?.username}</strong>
+          <strong>{lastFollower.username}</strong>
         </div>
       )}
 

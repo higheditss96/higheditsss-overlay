@@ -22,7 +22,7 @@
   z-index: 3;
   opacity: 0;
   animation: fadeInPic 1.2s ease forwards;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6); /* doar drop shadow */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -48,7 +48,7 @@
   font-size: 4.2rem;
   font-weight: 700;
   color: var(--main-color);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* doar umbră fină */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   z-index: 3;
   transition: transform 0.2s ease, text-shadow 0.3s ease;
   margin-bottom: 8px;
@@ -56,6 +56,17 @@
 
 .followers-count.no-pfp {
   margin-top: -20px;
+}
+
+/* === FLASH COLORS === */
+.flash-green {
+  color: #00ff9d;
+  text-shadow: 0 0 20px #00ff9d;
+}
+
+.flash-red {
+  color: #ff4d4d;
+  text-shadow: 0 0 20px #ff4d4d;
 }
 
 /* === GOAL BAR === */
@@ -80,7 +91,6 @@
   transition: width 1s ease-in-out;
 }
 
-/* Textul (numerele) centrat */
 .goal-text {
   position: absolute;
   top: 50%;
@@ -89,7 +99,7 @@
   color: #ffffff;
   font-size: 1.3rem;
   font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* doar drop shadow */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   z-index: 3;
   user-select: none;
   white-space: nowrap;
@@ -106,7 +116,7 @@
   border-radius: 50%;
   filter: blur(30px);
   z-index: 0;
-  opacity: 0.2; /* foarte subtil */
+  opacity: 0.2;
   transition: background 0.5s ease;
   animation: auraFloat 6s ease-in-out infinite alternate;
 }
@@ -122,24 +132,63 @@
 
 /* === LAST FOLLOWER === */
 .last-follower {
-  margin-top: 12px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #fff;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+  color: #ffffff;
   font-family: "Poppins", sans-serif;
-  font-size: 1.1rem;
-  font-weight: 500;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  font-size: 1.15rem;
+  font-weight: 600;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+  animation: fadeInFollower 0.6s ease-in-out;
+  transition: transform 0.3s ease, filter 0.3s ease;
   z-index: 5;
 }
 
+.last-follower span {
+  opacity: 0.8;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.last-follower strong {
+  color: var(--main-color);
+  font-weight: 700;
+  text-shadow: 0 0 6px var(--main-color);
+  transition: all 0.3s ease;
+}
+
+.last-follower:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 10px var(--main-color));
+}
+
 .last-follower-pfp {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+  border: 2px solid var(--main-color);
+  box-shadow: 0 0 10px var(--main-color);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.last-follower:hover .last-follower-pfp {
+  transform: scale(1.1);
+  box-shadow: 0 0 16px var(--main-color);
+}
+
+@keyframes fadeInFollower {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* === BULE === */
@@ -173,5 +222,35 @@
   100% {
     transform: translate(var(--dx), var(--dy)) scale(0.5);
     opacity: 0;
+  }
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .followers-count {
+    font-size: 2.8rem;
+  }
+
+  .pfp {
+    width: 70px;
+    height: 70px;
+  }
+
+  .goal-container {
+    width: 85%;
+    height: 24px;
+  }
+
+  .goal-text {
+    font-size: 1rem;
+  }
+
+  .last-follower {
+    font-size: 1rem;
+  }
+
+  .last-follower-pfp {
+    width: 28px;
+    height: 28px;
   }
 }
