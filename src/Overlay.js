@@ -3,12 +3,12 @@ import "./Overlay.css";
 
 export default function Overlay() {
   const [followers, setFollowers] = useState(0);
-  const [previousFollowers, setPreviousFollowers] = useState(0);
   const [profilePic, setProfilePic] = useState("");
+  const [lastFollower, setLastFollower] = useState(null);
+  const [previousFollowers, setPreviousFollowers] = useState(0);
   const [auraColor, setAuraColor] = useState("");
   const [bubbles, setBubbles] = useState([]);
   const [flash, setFlash] = useState(false);
-  const [lastFollower, setLastFollower] = useState(null);
   const numberRef = useRef(null);
 
   // === URL PARAMS ===
@@ -23,65 +23,52 @@ export default function Overlay() {
   const goal = parseInt(params.get("goal")) || 10000;
   const useMock = params.get("mock") === "true";
 
-  // === FETCH FOLLOWERS & LAST FOLLOWER ===
+  // === FETCH DATA ===
   const fetchFollowers = useCallback(async () => {
     try {
-      // 1️⃣ Kick API v2 — followers total
-      const channelRes = await fetch(`https://kick.com/api/v2/channels/${user}`);
-      const channelData = await channelRes.json();
+      // followers count
+      const res = await fetch(`https://kick.com/api/v2/channels/${user}`);
+      const data = await res.json();
 
       const followersCount =
-        channelData?.followers_count ||
-        channelData?.followersCount ||
-        channelData?.follower_count ||
-        0;
+        data?.followers_count || data?.follower_count || data?.followersCount || 0;
 
       setFollowers(followersCount);
-      setProfilePic(channelData?.user?.profile_pic || "");
+      setProfilePic(data?.user?.profile_pic || "");
 
-      // 2️⃣ Fetch last follower (real sau mock)
+      // last follower (mock or real)
       const endpoint = useMock
         ? "/api/mock-followers"
         : `/api/last-follower?user=${user}`;
+      const res2 = await fetch(endpoint);
+      const data2 = await res2.json();
 
-      const followersRes = await fetch(endpoint);
-      const followersData = await followersRes.json();
-
-      if (Array.isArray(followersData) && followersData.length > 0) {
-        const newFollower = followersData[0].user;
-        if (newFollower.username !== lastFollower?.username) {
-          setLastFollower(newFollower);
+      if (Array.isArray(data2) && data2.length > 0) {
+        const follower = data2[0].user;
+        if (follower?.username !== lastFollower?.username) {
+          setLastFollower(follower);
         }
       }
     } catch (err) {
-      console.error("❌ Kick API fetch failed:", err);
+      console.error("Failed to fetch Kick data:", err);
     }
   }, [user, lastFollower, useMock]);
 
-  // === INTERVAL UPDATE ===
+  // update interval
   useEffect(() => {
     fetchFollowers();
-    const interval = setInterval(fetchFollowers, 8000); // update la 8 secunde
+    const interval = setInterval(fetchFollowers, 8000);
     return () => clearInterval(interval);
   }, [fetchFollowers]);
 
-  // === FOLLOW / UNFOLLOW ANIMATION ===
+  // animation on follow change
   useEffect(() => {
-    if (followers === 0 && previousFollowers === 0) return;
-
     if (followers > previousFollowers) {
-      setAuraColor(`${customColor}50`);
-      spawnBubbles(customColor);
+      setAuraColor(`${customColor}40`);
       triggerFlash("green");
-    } else if (followers < previousFollowers) {
-      setAuraColor("rgba(255, 60, 60, 0.4)");
-      spawnBubbles("rgba(255, 60, 60, 0.8)");
-      triggerFlash("red");
+      spawnBubbles(customColor);
     }
-
-    const timer = setTimeout(() => setAuraColor(`${customColor}30`), 1200);
     setPreviousFollowers(followers);
-    return () => clearTimeout(timer);
   }, [followers, previousFollowers, customColor]);
 
   const triggerFlash = (type) => {
@@ -92,31 +79,22 @@ export default function Overlay() {
   const spawnBubbles = (color) => {
     if (!numberRef.current) return;
     const rect = numberRef.current.getBoundingClientRect();
-
     for (let i = 0; i < 20; i++) {
       const id = Math.random().toString(36).substring(2, 9);
-      const offsetX = rect.left + Math.random() * rect.width;
-      const offsetY = rect.top + Math.random() * rect.height;
-      const size = 6 + Math.random() * 14;
-      const duration = 2 + Math.random() * 2;
-      const directionX = (Math.random() - 0.5) * 150;
-      const directionY = -200 - Math.random() * 100;
-
       const bubble = {
         id,
+        x: rect.left + Math.random() * rect.width,
+        y: rect.top + Math.random() * rect.height,
+        size: 6 + Math.random() * 14,
+        duration: 2 + Math.random() * 2,
         color,
-        x: offsetX,
-        y: offsetY,
-        size,
-        duration,
-        directionX,
-        directionY,
+        dx: (Math.random() - 0.5) * 150,
+        dy: -200 - Math.random() * 100,
       };
-
       setBubbles((prev) => [...prev, bubble]);
       setTimeout(
         () => setBubbles((prev) => prev.filter((b) => b.id !== id)),
-        duration * 1000
+        bubble.duration * 1000
       );
     }
   };
@@ -136,9 +114,9 @@ export default function Overlay() {
             auraColor || `${customColor}30`
           }, transparent 70%)`,
         }}
-      ></div>
+      />
 
-      {/* PROFILE PIC */}
+      {/* PROFILE PICTURE */}
       {showProfile && profilePic && (
         <img src={profilePic} alt="pfp" className="pfp" draggable="false" />
       )}
@@ -169,10 +147,10 @@ export default function Overlay() {
         </div>
       )}
 
-      {/* LAST FOLLOWER */}
+      {/* LAST FOLLOWER SECTION */}
       {lastFollower && (
         <div className="last-follower">
-          <span>Last Follow:</span>
+          <span className="label">⭐ Last Follower:</span>
           {lastFollower.profile_pic && (
             <img
               src={lastFollower.profile_pic}
@@ -181,11 +159,11 @@ export default function Overlay() {
               draggable="false"
             />
           )}
-          <strong>{lastFollower.username}</strong>
+          <strong className="username">{lastFollower.username}</strong>
         </div>
       )}
 
-      {/* BUBBLE LAYER */}
+      {/* BUBBLES */}
       <div className="bubble-layer">
         {bubbles.map((b) => (
           <div
@@ -198,8 +176,8 @@ export default function Overlay() {
               height: `${b.size}px`,
               backgroundColor: b.color,
               animationDuration: `${b.duration}s`,
-              "--dx": `${b.directionX}px`,
-              "--dy": `${b.directionY}px`,
+              "--dx": `${b.dx}px`,
+              "--dy": `${b.dy}px`,
             }}
           />
         ))}
