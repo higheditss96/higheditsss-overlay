@@ -7,8 +7,30 @@ export default async function handler(req, res) {
   }
 
   try {
-    // cerem de la Kick ultimul follower public
-    const response = await fetch(
+    // 1️⃣ Verificăm dacă streamerul e LIVE
+    const streamRes = await fetch(`https://kick.com/api/v2/streams/${user}`, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; HighStatsOverlay/1.0)"
+      }
+    });
+
+    if (!streamRes.ok) {
+      console.warn(`⚠️ Stream check failed for ${user}: ${streamRes.status}`);
+      return res.status(200).json([]);
+    }
+
+    const streamData = await streamRes.json();
+
+    // dacă nu e live → returnăm gol
+    if (!streamData.livestream || !streamData.livestream.is_live) {
+      console.log(`💤 ${user} nu este live — nu returnăm followers.`);
+      return res.status(200).json([]);
+    }
+
+    console.log(`✅ ${user} este LIVE — căutăm ultimul follower...`);
+
+    // 2️⃣ Căutăm ultimul follower doar dacă e live
+    const followersRes = await fetch(
       `https://kick.com/api/v1/channels/${user}/followers?limit=1`,
       {
         headers: {
@@ -17,23 +39,23 @@ export default async function handler(req, res) {
       }
     );
 
-    const text = await response.text();
+    const text = await followersRes.text();
 
-    // dacă Kick răspunde cu HTML, trimitem gol (nu JSON)
+    // dacă Kick trimite HTML (nu JSON)
     if (text.startsWith("<!DOCTYPE")) {
-      console.warn("⚠️ Kick API a trimis HTML în loc de JSON");
+      console.warn("⚠️ Kick a trimis HTML — returnăm gol.");
       return res.status(200).json([]);
     }
 
     const data = JSON.parse(text);
 
-    // dacă nu e listă sau e goală, returnăm gol
+    // dacă lista e goală → returnăm nimic
     if (!Array.isArray(data) || data.length === 0) {
       console.warn("⚠️ Kick API nu a returnat followers.");
       return res.status(200).json([]);
     }
 
-    // returnăm exact lista Kick (de obicei cu un singur element)
+    // ✅ returnăm ultimul follower real
     return res.status(200).json(data);
   } catch (err) {
     console.error("❌ Kick API error:", err);
