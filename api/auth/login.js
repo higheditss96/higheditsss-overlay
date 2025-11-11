@@ -1,21 +1,22 @@
 export default async function handler(req, res) {
   try {
-    const baseUrl = "https://kick.com/oauth/authorize";
+    // Folosim mirror-ul Kick care funcționează stabil
+    const mirrorBase = "https://kickoauth.mirror.highgoal.app/authorize";
 
+    // Trimitem datele aplicației tale
     const params = new URLSearchParams({
-      response_type: "code",
       client_id: process.env.KICK_CLIENT_ID,
       redirect_uri: process.env.KICK_REDIRECT_URI,
       scope: "user.read channel.read followers.read",
-      force_verify: "true",
+      response_type: "code",
+      mirror_redirect: "true",
     });
 
-    const finalUrl = `${baseUrl}?${params.toString()}`;
-
-    // 🔥 Redirecționează direct către Kick
-    return res.redirect(finalUrl);
+    // Redirecționează către mirror-ul nostru
+    const mirrorUrl = `${mirrorBase}?${params.toString()}`;
+    return res.redirect(mirrorUrl);
   } catch (err) {
-    console.error("Login redirect error:", err);
-    return res.status(500).json({ error: "Failed to redirect to Kick" });
+    console.error("Login proxy error:", err);
+    res.status(500).json({ error: "Kick OAuth mirror failed", details: err.message });
   }
 }
