@@ -7,46 +7,57 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1️⃣ Verificăm dacă streamerul e live folosind mirror Kick API
-    const streamRes = await fetch(`https://kickapi.milkyway.dev/v2/streams/${user}`);
+    // 1️⃣ Verificăm dacă streamerul e live
+    const liveCheck = await fetch(`https://kick.com/api/v2/channels/${user}`, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; HighStatsOverlay/1.0)"
+      }
+    });
 
-    if (!streamRes.ok) {
-      console.warn(`⚠️ Stream check failed for ${user}: ${streamRes.status}`);
-      return res.status(200).json([]);
-    }
+    const channelData = await liveCheck.json();
 
-    const streamData = await streamRes.json();
+    const isLive =
+      channelData?.livestream?.is_live ||
+      channelData?.is_live ||
+      channelData?.livestream_status === "live";
 
-    // dacă nu e live
-    if (!streamData.livestream || !streamData.livestream.is_live) {
+    if (!isLive) {
       console.log(`💤 ${user} nu este live — returnăm gol`);
       return res.status(200).json([]);
     }
 
     console.log(`✅ ${user} este LIVE — căutăm ultimul follower...`);
 
-    // 2️⃣ Căutăm ultimul follower din mirror Kick API
-    const followersRes = await fetch(
-      `https://kickapi.milkyway.dev/v1/channels/${user}/followers?limit=1`
-    );
+    // 2️⃣ Proxy pentru followers (folosim AllOrigins pentru a ocoli restricțiile Kick)
+    const proxyURL = `https://api.allorigins.win/raw?url=${encodeURIComponent(
+      `https://kick.com/api/v1/channels/${user}/followers?limit=1`
+    )}`;
 
-    if (!followersRes.ok) {
-      console.warn(`⚠️ Follower fetch failed: ${followersRes.status}`);
+    const followersRes = await fetch(proxyURL, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; HighStatsOverlay/1.0)"
+      }
+    });
+
+    const text = await followersRes.text();
+
+    // dacă Kick trimite HTML, returnăm gol
+    if (text.startsWith("<!DOCTYPE")) {
+      console.warn("⚠️ Kick a răspuns cu HTML — returnăm gol.");
       return res.status(200).json([]);
     }
 
-    const data = await followersRes.json();
+    const data = JSON.parse(text);
 
-    // dacă lista e goală → returnăm nimic
     if (!Array.isArray(data) || data.length === 0) {
-      console.warn("⚠️ Kick mirror nu a returnat followers.");
+      console.warn("⚠️ Niciun follower găsit.");
       return res.status(200).json([]);
     }
 
-    // ✅ returnăm ultimul follower real
+    // ✅ Returnăm follower real
     return res.status(200).json(data);
   } catch (err) {
-    console.error("❌ Kick mirror API error:", err);
-    return res.status(500).json({ error: "Kick mirror request failed" });
+    console.error("❌ Eroare Kick API:", err);
+    return res.status(500).json({ error: "Kick proxy request failed" });
   }
 }
