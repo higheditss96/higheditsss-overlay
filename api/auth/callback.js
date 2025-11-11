@@ -1,10 +1,12 @@
 export default async function handler(req, res) {
   const { code } = req.query;
 
-  if (!code) return res.status(400).send("Missing code");
+  if (!code) {
+    return res.status(400).json({ error: "Missing authorization code" });
+  }
 
   try {
-    const response = await fetch("https://kick.com/api/v1/oauth/token", {
+    const tokenResponse = await fetch("https://kick.com/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -16,22 +18,28 @@ export default async function handler(req, res) {
       }),
     });
 
-    const data = await response.json();
+    const tokenData = await tokenResponse.json();
 
-    if (data.access_token) {
-      // ✅ Afișăm tokenul în browser pentru a-l salva în Vercel
-      return res.status(200).send(`
-        <h2>✅ Kick OAuth complet!</h2>
-        <p>Copiază acest <b>access_token</b> și pune-l în Vercel:</p>
-        <pre style="background:#111;color:#0f0;padding:15px;border-radius:8px;">${data.access_token}</pre>
-        <p><b>Vercel → Settings → Environment Variables →</b> adaugă:</p>
-        <code>KICK_ACCESS_TOKEN=${data.access_token}</code>
-      `);
+    if (!tokenResponse.ok) {
+      console.error("Token error:", tokenData);
+      return res.status(500).json({ error: "Failed to get access token" });
     }
 
-    return res.status(500).json({ error: "No access token returned", data });
-  } catch (err) {
-    console.error("OAuth error:", err);
-    return res.status(500).json({ error: "OAuth failed" });
+    const userResponse = await fetch("https://kick.com/api/v1/user", {
+      headers: {
+        Authorization: `Bearer ${tokenData.access_token}`,
+      },
+    });
+
+    const userData = await userResponse.json();
+
+    return res.status(200).json({
+      success: true,
+      user: userData,
+      access_token: tokenData.access_token,
+    });
+  } catch (error) {
+    console.error("Callback error:", error);
+    return res.status(500).json({ error: "Server error" });
   }
 }
