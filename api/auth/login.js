@@ -1,16 +1,31 @@
 export default function handler(req, res) {
   try {
-    const authUrl = new URL("https://kick.com/oauth/authorize");
+    const baseUrl = "https://kick.com/oauth/authorize";
 
-    authUrl.searchParams.set("response_type", "code");
-    authUrl.searchParams.set("client_id", process.env.KICK_CLIENT_ID);
-    authUrl.searchParams.set("redirect_uri", process.env.KICK_REDIRECT_URI);
-    authUrl.searchParams.set("scope", "user.read channel.read follows.read");
+    // Construim parametrii pentru Kick OAuth
+    const params = new URLSearchParams({
+      response_type: "code",
+      client_id: process.env.KICK_CLIENT_ID,
+      redirect_uri: process.env.KICK_REDIRECT_URI,
+      scope: "user.read channel.read follows.read",
+      force_verify: "true",
+    });
 
-    console.log("Redirecting user to Kick OAuth:", authUrl.toString());
-    return res.redirect(302, authUrl.toString());
+    // ✅ Kick cere ca redirect_uri să fie URL-encoded manual
+    const redirectUri = encodeURIComponent(process.env.KICK_REDIRECT_URI);
+
+    // Refacem URL-ul final cu redirect-ul corect codificat
+    const finalUrl = `${baseUrl}?response_type=code&client_id=${process.env.KICK_CLIENT_ID}&redirect_uri=${redirectUri}&scope=user.read%20channel.read%20follows.read&force_verify=true`;
+
+    console.log("Redirecting to Kick OAuth:", finalUrl);
+
+    // Redirecționează userul către Kick
+    return res.redirect(302, finalUrl);
   } catch (error) {
-    console.error("OAuth login redirect failed:", error);
-    res.status(500).json({ error: "Kick OAuth redirect failed" });
+    console.error("Kick OAuth redirect failed:", error);
+    res.status(500).json({
+      error: "Kick OAuth redirect failed",
+      details: error.message,
+    });
   }
 }
