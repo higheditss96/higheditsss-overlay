@@ -1,187 +1,177 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
-import "./Overlay.css";
+// === HIGHSTATS OVERLAY ===
+// autor: @hyghman edition 💚
+// afiseaza numarul de followers si ultimul follower de pe Kick
 
-export default function Overlay() {
-  const [followers, setFollowers] = useState(0);
-  const [profilePic, setProfilePic] = useState("");
-  const [lastFollower, setLastFollower] = useState(null);
-  const [previousFollowers, setPreviousFollowers] = useState(0);
-  const [auraColor, setAuraColor] = useState("");
-  const [bubbles, setBubbles] = useState([]);
-  const [flash, setFlash] = useState(false);
-  const numberRef = useRef(null);
+const params = new URLSearchParams(window.location.search);
+const username = params.get("user") || "hyghman";
+const color = params.get("color") || "#00ffaa";
+const font = params.get("font") || "Poppins";
 
-  // === URL PARAMS ===
-  const params = new URLSearchParams(window.location.search);
-  const user = params.get("user") || "hyghman";
-  const customColor = decodeURIComponent(params.get("color") || "#00ffaa");
-  const showProfile =
-    params.get("showProfilePicture") === "true" ||
-    params.get("showProfilePicture") === "yes";
-  const useGoal =
-    params.get("useGoal") === "true" || params.get("useGoal") === "yes";
-  const goal = parseInt(params.get("goal")) || 10000;
-  const useMock = params.get("mock") === "true";
+document.body.style.setProperty("--main-color", color);
+document.body.style.fontFamily = font;
 
-  // === FETCH DATA ===
-  const fetchFollowers = useCallback(async () => {
-    try {
-      // followers count
-      const res = await fetch(`https://kick.com/api/v2/channels/${user}`);
-      const data = await res.json();
-
-      const followersCount =
-        data?.followers_count || data?.follower_count || data?.followersCount || 0;
-
-      setFollowers(followersCount);
-      setProfilePic(data?.user?.profile_pic || "");
-
-      // last follower (mock or real)
-      const endpoint = useMock
-        ? "/api/mock-followers"
-        : `/api/last-follower?user=${user}`;
-      const res2 = await fetch(endpoint);
-      const data2 = await res2.json();
-
-      if (Array.isArray(data2) && data2.length > 0) {
-        const follower = data2[0].user;
-        if (follower?.username !== lastFollower?.username) {
-          setLastFollower(follower);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to fetch Kick data:", err);
-    }
-  }, [user, lastFollower, useMock]);
-
-  // update interval
-  useEffect(() => {
-    fetchFollowers();
-    const interval = setInterval(fetchFollowers, 8000);
-    return () => clearInterval(interval);
-  }, [fetchFollowers]);
-
-  // animation on follow change
-  useEffect(() => {
-    if (followers > previousFollowers) {
-      setAuraColor(`${customColor}40`);
-      triggerFlash("green");
-      spawnBubbles(customColor);
-    }
-    setPreviousFollowers(followers);
-  }, [followers, previousFollowers, customColor]);
-
-  const triggerFlash = (type) => {
-    setFlash(type);
-    setTimeout(() => setFlash(false), 400);
-  };
-
-  const spawnBubbles = (color) => {
-    if (!numberRef.current) return;
-    const rect = numberRef.current.getBoundingClientRect();
-    for (let i = 0; i < 20; i++) {
-      const id = Math.random().toString(36).substring(2, 9);
-      const bubble = {
-        id,
-        x: rect.left + Math.random() * rect.width,
-        y: rect.top + Math.random() * rect.height,
-        size: 6 + Math.random() * 14,
-        duration: 2 + Math.random() * 2,
-        color,
-        dx: (Math.random() - 0.5) * 150,
-        dy: -200 - Math.random() * 100,
-      };
-      setBubbles((prev) => [...prev, bubble]);
-      setTimeout(
-        () => setBubbles((prev) => prev.filter((b) => b.id !== id)),
-        bubble.duration * 1000
-      );
-    }
-  };
-
-  const progress = Math.min((followers / goal) * 100, 100);
-
-  return (
-    <div
-      className="overlay-container"
-      style={{ "--main-color": customColor, "--goal-color": customColor }}
-    >
-      {/* AURA */}
-      <div
-        className={`aura ${flash ? "aura-flash" : ""}`}
-        style={{
-          background: `radial-gradient(circle, ${
-            auraColor || `${customColor}30`
-          }, transparent 70%)`,
-        }}
-      />
-
-      {/* PROFILE PICTURE */}
-      {showProfile && profilePic && (
-        <img src={profilePic} alt="pfp" className="pfp" draggable="false" />
-      )}
-
-      {/* FOLLOWER COUNT */}
-      <div
-        ref={numberRef}
-        className={`followers-count ${flash ? `flash-${flash}` : ""} ${
-          showProfile ? "" : "no-pfp"
-        }`}
-      >
-        {followers.toLocaleString()}
-      </div>
-
-      {/* GOAL BAR */}
-      {useGoal && (
-        <div className="goal-container">
-          <div
-            className="goal-bar"
-            style={{
-              width: `${progress}%`,
-              backgroundColor: customColor,
-            }}
-          ></div>
-          <div className="goal-text">
-            {followers.toLocaleString()} / {goal.toLocaleString()}
-          </div>
-        </div>
-      )}
-
-      {/* LAST FOLLOWER SECTION */}
-      {lastFollower && (
-        <div className="last-follower">
-          <span className="label">⭐ Last Follower:</span>
-          {lastFollower.profile_pic && (
-            <img
-              src={lastFollower.profile_pic}
-              alt="last follower"
-              className="last-follower-pfp"
-              draggable="false"
-            />
-          )}
-          <strong className="username">{lastFollower.username}</strong>
-        </div>
-      )}
-
-      {/* BUBBLES */}
-      <div className="bubble-layer">
-        {bubbles.map((b) => (
-          <div
-            key={b.id}
-            className="bubble"
-            style={{
-              left: `${b.x}px`,
-              top: `${b.y}px`,
-              width: `${b.size}px`,
-              height: `${b.size}px`,
-              backgroundColor: b.color,
-              animationDuration: `${b.duration}s`,
-              "--dx": `${b.dx}px`,
-              "--dy": `${b.dy}px`,
-            }}
-          />
-        ))}
+// === STRUCTURA HTML ===
+document.body.innerHTML = `
+  <div class="overlay-container">
+    <div class="channel-info">
+      <img class="channel-avatar" src="" alt="Avatar" />
+      <div class="details">
+        <h2 class="username">Loading...</h2>
+        <p class="followers-count">Followers: <strong>0</strong></p>
       </div>
     </div>
-  );
+
+    <div class="last-follower">
+      <img class="last-follower-pfp" src="" alt="Follower" />
+      <span>Last Follower:</span>
+      <strong>Loading...</strong>
+    </div>
+  </div>
+`;
+
+// === ELEMENTE ===
+const avatar = document.querySelector(".channel-avatar");
+const usernameEl = document.querySelector(".username");
+const followersEl = document.querySelector(".followers-count strong");
+const lastFollowerPfp = document.querySelector(".last-follower-pfp");
+const lastFollowerName = document.querySelector(".last-follower strong");
+
+// === FUNCTII DE FETCH ===
+async function fetchChannelInfo() {
+  try {
+    const res = await fetch(`/api/channel-info?user=${username}`);
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || "Kick API error");
+
+    avatar.src = data.avatar || "https://cdn.kick.com/images/default-avatar.png";
+    usernameEl.textContent = data.username;
+    followersEl.textContent = data.followers ?? 0;
+  } catch (err) {
+    console.warn("❌ Eroare la channel-info:", err.message);
+    usernameEl.textContent = "Channel Not Found";
+    followersEl.textContent = "N/A";
+  }
 }
+
+async function fetchLastFollower() {
+  try {
+    const res = await fetch(`/api/last-follower?user=${username}`);
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || "Kick API error");
+
+    lastFollowerPfp.src = data.avatar || "https://cdn.kick.com/images/default-avatar.png";
+    lastFollowerName.textContent = data.username;
+  } catch (err) {
+    console.warn("❌ Eroare la last-follower:", err.message);
+    lastFollowerName.textContent = "N/A";
+  }
+}
+
+// === ACTUALIZARE PERIODICA ===
+async function refreshOverlay() {
+  await Promise.all([fetchChannelInfo(), fetchLastFollower()]);
+}
+
+// Prima încărcare
+refreshOverlay();
+
+// Actualizare la fiecare 10 secunde
+setInterval(refreshOverlay, 10000);
+
+// === ANIMATII DE EFECT ===
+const style = document.createElement("style");
+style.textContent = `
+  body {
+    background: transparent;
+    color: white;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: "${font}", sans-serif;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .overlay-container {
+    animation: fadeIn 0.8s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .channel-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .channel-avatar {
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    border: 3px solid var(--main-color);
+    box-shadow: 0 0 10px var(--main-color);
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .channel-avatar:hover {
+    transform: scale(1.05);
+  }
+
+  .details {
+    text-align: left;
+  }
+
+  .username {
+    margin: 0;
+    font-size: 1.5rem;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+
+  .followers-count {
+    font-size: 1rem;
+    opacity: 0.9;
+  }
+
+  .last-follower {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    transition: transform 0.3s ease, filter 0.3s ease;
+  }
+
+  .last-follower-pfp {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--main-color);
+    filter: drop-shadow(0 0 6px var(--main-color));
+    object-fit: cover;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .last-follower:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 10px var(--main-color));
+  }
+
+  .last-follower:hover .last-follower-pfp {
+    transform: scale(1.1);
+    box-shadow: 0 0 16px var(--main-color);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+`;
+document.head.appendChild(style);

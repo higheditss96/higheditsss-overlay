@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   });
 
   // noul URL corect pentru Kick OAuth
-  const authURL = `https://kick.com/api/v1/oauth/authorize?${params.toString()}`;
+  const authURL = `api/v1/oauth/authorize?${params.toString()}`;
 
   return res.redirect(authURL);
 }
