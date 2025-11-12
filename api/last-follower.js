@@ -5,37 +5,31 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 🟢 Mirror public pentru API Kick (funcționează stabil)
-    const kickMirror = `https://kickapi.su/api/v2/channels/${username}/followers?limit=1`;
-
-    const response = await fetch(kickMirror, {
+    const url = `https://kickapi.su/api/v2/channels/${username}/followers?limit=1`;
+    const response = await fetch(url, {
       headers: {
         "User-Agent": "HighStatsOverlay/1.0",
-        Accept: "application/json",
-      },
+        "Accept": "application/json"
+      }
     });
 
     if (!response.ok) {
-      return res.status(500).json({ error: "Kick mirror request failed" });
+      return res.status(500).json({ error: "Kick API request failed" });
     }
 
     const data = await response.json();
 
-    if (!data || !data.data || !data.data.length) {
+    if (!data?.data?.length) {
       return res.status(404).json({ error: "No followers found" });
     }
 
-    const lastFollower = data.data[0];
-    return res.status(200).json({
-      username: lastFollower.follower.username,
-      avatar: lastFollower.follower.profile_pic || null,
-      followed_at: lastFollower.created_at,
+    const last = data.data[0].follower;
+    res.status(200).json({
+      username: last.username,
+      avatar: last.profile_pic,
+      followed_at: data.data[0].created_at
     });
-  } catch (error) {
-    console.error("Error fetching last follower:", error);
-    res.status(500).json({
-      error: "Internal server error",
-      details: error.message,
-    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 }
