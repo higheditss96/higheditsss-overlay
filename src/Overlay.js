@@ -1,20 +1,24 @@
-// === HIGHSTATS OVERLAY — Energy Pulse + Glass Glow ===
+// === HIGHSTATS OVERLAY — Energy Pulse + Glass Glow (v2) ===
 
 const params = new URLSearchParams(window.location.search);
 const username = params.get("user") || "hyghman";
 const color = params.get("color") || "#00ffaa";
 const font = params.get("font") || "Poppins";
 const useGoal = params.get("useGoal") === "true";
+const showProfilePic = params.get("showProfilePic") !== "false"; // nou
 const goal = parseInt(params.get("goal") || "10000");
 
 document.body.style.setProperty("--main-color", color);
 document.body.style.fontFamily = font;
 
-// === STRUCTURĂ HTML ===
 document.body.innerHTML = `
   <div class="overlay">
     <div class="glass-card">
-      <img id="pfp" class="pfp hidden" src="https://cdn.kick.com/images/default-avatar.png" alt="Profile Picture" />
+      ${
+        showProfilePic
+          ? `<img id="pfp" class="pfp hidden" src="https://cdn.kick.com/images/default-avatar.png" alt="Profile Picture" />`
+          : ""
+      }
       <div id="followers" class="followers-count hidden">N/A</div>
       ${
         useGoal
@@ -39,25 +43,23 @@ const pulseBg = document.querySelector(".pulse-bg");
 
 let lastFollowerCount = null;
 
-// === FETCH FOLLOWERS ===
 async function fetchFollowers() {
   try {
     let res = await fetch(`https://kick.com/api/v2/channels/${username}`);
     if (!res.ok) throw new Error("Kick.com API failed, trying backup");
 
     const data = await res.json();
-
     const avatar =
       data?.user?.profile_pic ||
       data?.user?.profilePic ||
       "https://cdn.kick.com/images/default-avatar.png";
     const followers = data?.followers_count || data?.followersCount || 0;
 
-    pfp.src = avatar;
+    if (pfp) pfp.src = avatar;
     followersEl.textContent = followers.toLocaleString("en-US");
 
-    fadeIn(pfp);
     fadeIn(followersEl);
+    if (pfp) fadeIn(pfp);
     if (goalBar) fadeIn(goalBar);
 
     if (useGoal && goalFill && goalText) {
@@ -86,9 +88,7 @@ function triggerFollow() {
   const overlay = document.querySelector(".glass-card");
   overlay.classList.remove("follow-anim");
   pulseBg.classList.remove("active");
-
   void overlay.offsetWidth;
-
   overlay.classList.add("follow-anim");
   pulseBg.classList.add("active");
 }
@@ -103,7 +103,7 @@ function triggerUnfollow() {
 fetchFollowers();
 setInterval(fetchFollowers, 10000);
 
-// === STILURI ===
+// === STYLE ===
 const style = document.createElement("style");
 style.textContent = `
   body {
@@ -205,28 +205,28 @@ style.textContent = `
     transition: width 0.6s ease;
   }
 
+  /* 🔥 TEXT CENTRAT PERFECT în goal bar */
   .goal-text {
-    position: relative;
-    z-index: 3;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     color: white;
     font-weight: 700;
     font-size: 1.1rem;
     text-shadow: 0 2px 6px rgba(0,0,0,0.5);
-    line-height: 28px;
+    z-index: 3;
+    white-space: nowrap;
   }
 
-  .fade-in {
-    animation: fadeIn 0.8s ease forwards;
-  }
+  .fade-in { animation: fadeIn 0.8s ease forwards; }
 
   @keyframes fadeIn {
     from { opacity: 0; transform: scale(0.9) translateY(10px); }
     to { opacity: 1; transform: scale(1) translateY(0); }
   }
 
-  .follow-anim {
-    animation: followEffect 0.6s ease;
-  }
+  .follow-anim { animation: followEffect 0.6s ease; }
 
   @keyframes followEffect {
     0% { transform: scale(1); }
@@ -234,9 +234,7 @@ style.textContent = `
     100% { transform: scale(1); }
   }
 
-  .unfollow-anim {
-    animation: unfollowEffect 0.6s ease;
-  }
+  .unfollow-anim { animation: unfollowEffect 0.6s ease; }
 
   @keyframes unfollowEffect {
     0% { transform: scale(1); opacity: 1; }
