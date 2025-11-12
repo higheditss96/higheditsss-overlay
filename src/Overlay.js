@@ -1,19 +1,20 @@
-// === HIGHSTATS OVERLAY — Energy Pulse + Glass Glow (v2) ===
+// === HIGHSTATS OVERLAY — cu Show Profile Picture ON/OFF ===
 
 const params = new URLSearchParams(window.location.search);
 const username = params.get("user") || "hyghman";
 const color = params.get("color") || "#00ffaa";
 const font = params.get("font") || "Poppins";
 const useGoal = params.get("useGoal") === "true";
-const showProfilePic = params.get("showProfilePic") !== "false"; // nou
+const showProfilePic = (params.get("showProfilePic") || "Yes").toLowerCase() === "yes";
 const goal = parseInt(params.get("goal") || "10000");
 
 document.body.style.setProperty("--main-color", color);
 document.body.style.fontFamily = font;
 
+// === HTML STRUCTURE ===
 document.body.innerHTML = `
   <div class="overlay">
-    <div class="glass-card">
+    <div class="glass-card ${showProfilePic ? "with-pfp" : "no-pfp"}">
       ${
         showProfilePic
           ? `<img id="pfp" class="pfp hidden" src="https://cdn.kick.com/images/default-avatar.png" alt="Profile Picture" />`
@@ -43,23 +44,23 @@ const pulseBg = document.querySelector(".pulse-bg");
 
 let lastFollowerCount = null;
 
+// === FETCH FOLLOWERS ===
 async function fetchFollowers() {
   try {
-    let res = await fetch(`https://kick.com/api/v2/channels/${username}`);
-    if (!res.ok) throw new Error("Kick.com API failed, trying backup");
-
+    const res = await fetch(`https://kick.com/api/v2/channels/${username}`);
     const data = await res.json();
+
     const avatar =
       data?.user?.profile_pic ||
       data?.user?.profilePic ||
       "https://cdn.kick.com/images/default-avatar.png";
     const followers = data?.followers_count || data?.followersCount || 0;
 
-    if (pfp) pfp.src = avatar;
+    if (pfp && showProfilePic) pfp.src = avatar;
     followersEl.textContent = followers.toLocaleString("en-US");
 
     fadeIn(followersEl);
-    if (pfp) fadeIn(pfp);
+    if (showProfilePic && pfp) fadeIn(pfp);
     if (goalBar) fadeIn(goalBar);
 
     if (useGoal && goalFill && goalText) {
@@ -103,7 +104,7 @@ function triggerUnfollow() {
 fetchFollowers();
 setInterval(fetchFollowers, 10000);
 
-// === STYLE ===
+// === STILURI ===
 const style = document.createElement("style");
 style.textContent = `
   body {
@@ -135,6 +136,12 @@ style.textContent = `
     box-shadow: 0 8px 24px rgba(0,0,0,0.4);
     overflow: hidden;
     transition: transform 0.3s ease;
+  }
+
+  /* Ajustare automată când poza e ascunsă */
+  .glass-card.no-pfp {
+    gap: 10px;
+    padding: 28px 40px;
   }
 
   .pulse-bg {
@@ -205,7 +212,6 @@ style.textContent = `
     transition: width 0.6s ease;
   }
 
-  /* 🔥 TEXT CENTRAT PERFECT în goal bar */
   .goal-text {
     position: absolute;
     top: 50%;
