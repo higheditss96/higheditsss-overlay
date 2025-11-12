@@ -1,6 +1,5 @@
-// === HIGHSTATS OVERLAY ===
-// autor: @hyghman edition 💚
-// afiseaza numarul de followers si ultimul follower de pe Kick
+// === HIGHSTATS OVERLAY (minimal version) ===
+// Arată doar poza, numărul de followers și ultimul follower (real)
 
 const params = new URLSearchParams(window.location.search);
 const username = params.get("user") || "hyghman";
@@ -9,169 +8,133 @@ const font = params.get("font") || "Poppins";
 
 document.body.style.setProperty("--main-color", color);
 document.body.style.fontFamily = font;
-
-// === STRUCTURA HTML ===
 document.body.innerHTML = `
-  <div class="overlay-container">
-    <div class="channel-info">
-      <img class="channel-avatar" src="" alt="Avatar" />
-      <div class="details">
-        <h2 class="username">Loading...</h2>
-        <p class="followers-count">Followers: <strong>0</strong></p>
-      </div>
-    </div>
-
-    <div class="last-follower">
-      <img class="last-follower-pfp" src="" alt="Follower" />
+  <div class="overlay">
+    <img id="pfp" class="pfp" src="" alt="Profile Picture">
+    <div id="followers" class="followers-count">0</div>
+    <div id="last-follower" class="last-follower">
+      <img class="last-follower-pfp" src="" alt="Follower">
       <span>Last Follower:</span>
-      <strong>Loading...</strong>
+      <strong>N/A</strong>
     </div>
   </div>
 `;
 
-// === ELEMENTE ===
-const avatar = document.querySelector(".channel-avatar");
-const usernameEl = document.querySelector(".username");
-const followersEl = document.querySelector(".followers-count strong");
-const lastFollowerPfp = document.querySelector(".last-follower-pfp");
+// === Elemente HTML ===
+const pfp = document.getElementById("pfp");
+const followersEl = document.getElementById("followers");
 const lastFollowerName = document.querySelector(".last-follower strong");
+const lastFollowerPfp = document.querySelector(".last-follower-pfp");
 
-// === FUNCTII DE FETCH ===
-async function fetchChannelInfo() {
+// === Actualizare follower count ===
+async function fetchFollowers() {
   try {
-    const res = await fetch(`/api/channel-info?user=${username}`);
+    const res = await fetch(`https://kickapi.su/api/v2/channels/${username}`);
     const data = await res.json();
-    if (!res.ok || data.error) throw new Error(data.error || "Kick API error");
 
-    avatar.src = data.avatar || "https://cdn.kick.com/images/default-avatar.png";
-    usernameEl.textContent = data.username;
-    followersEl.textContent = data.followers ?? 0;
+    if (!data?.followersCount) throw new Error("No follower count found");
+
+    pfp.src = data.user.profile_pic || "https://cdn.kick.com/images/default-avatar.png";
+    followersEl.textContent = data.followersCount.toLocaleString("en-US");
   } catch (err) {
-    console.warn("❌ Eroare la channel-info:", err.message);
-    usernameEl.textContent = "Channel Not Found";
-    followersEl.textContent = "N/A";
+    console.warn("❌ Kick followers error:", err);
+    followersEl.textContent = "0";
   }
 }
 
+// === Ultimul follower ===
 async function fetchLastFollower() {
   try {
     const res = await fetch(`/api/last-follower?user=${username}`);
     const data = await res.json();
-    if (!res.ok || data.error) throw new Error(data.error || "Kick API error");
 
-    lastFollowerPfp.src = data.avatar || "https://cdn.kick.com/images/default-avatar.png";
+    if (!data?.username) {
+      lastFollowerName.textContent = "N/A";
+      lastFollowerPfp.src = "https://cdn.kick.com/images/default-avatar.png";
+      return;
+    }
+
     lastFollowerName.textContent = data.username;
+    lastFollowerPfp.src = data.avatar || "https://cdn.kick.com/images/default-avatar.png";
   } catch (err) {
-    console.warn("❌ Eroare la last-follower:", err.message);
+    console.warn("❌ Kick last follower error:", err);
     lastFollowerName.textContent = "N/A";
   }
 }
 
-// === ACTUALIZARE PERIODICA ===
-async function refreshOverlay() {
-  await Promise.all([fetchChannelInfo(), fetchLastFollower()]);
+// === Refresh automat ===
+async function refresh() {
+  await Promise.all([fetchFollowers(), fetchLastFollower()]);
 }
+refresh();
+setInterval(refresh, 10000);
 
-// Prima încărcare
-refreshOverlay();
-
-// Actualizare la fiecare 10 secunde
-setInterval(refreshOverlay, 10000);
-
-// === ANIMATII DE EFECT ===
+// === Stiluri integrate ===
 const style = document.createElement("style");
 style.textContent = `
   body {
     background: transparent;
     color: white;
-    margin: 0;
     display: flex;
-    flex-direction: column;
-    align-items: center;
     justify-content: center;
-    font-family: "${font}", sans-serif;
-    text-align: center;
+    align-items: center;
+    height: 100vh;
     overflow: hidden;
+    text-align: center;
+    font-family: "${font}", sans-serif;
   }
 
-  .overlay-container {
-    animation: fadeIn 0.8s ease-in-out;
+  .overlay {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
   }
 
-  .channel-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .channel-avatar {
-    width: 75px;
-    height: 75px;
+  .pfp {
+    width: 110px;
+    height: 110px;
     border-radius: 50%;
     border: 3px solid var(--main-color);
-    box-shadow: 0 0 10px var(--main-color);
+    box-shadow: 0 0 15px var(--main-color);
     object-fit: cover;
-    transition: transform 0.3s ease;
-  }
-
-  .channel-avatar:hover {
-    transform: scale(1.05);
-  }
-
-  .details {
-    text-align: left;
-  }
-
-  .username {
-    margin: 0;
-    font-size: 1.5rem;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   }
 
   .followers-count {
-    font-size: 1rem;
-    opacity: 0.9;
+    font-size: 3.5rem;
+    font-weight: bold;
+    color: #222;
+    background: rgba(255, 255, 255, 0.6);
+    padding: 8px 24px;
+    border-radius: 10px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
   }
 
   .last-follower {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    margin-top: 12px;
+    gap: 8px;
+    margin-top: 10px;
     font-size: 1.1rem;
     font-weight: 600;
-    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
-    transition: transform 0.3s ease, filter 0.3s ease;
+    color: #fff;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.4);
   }
 
   .last-follower-pfp {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     border: 2px solid var(--main-color);
-    filter: drop-shadow(0 0 6px var(--main-color));
     object-fit: cover;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    filter: drop-shadow(0 0 6px var(--main-color));
   }
 
-  .last-follower:hover {
-    transform: scale(1.05);
-    filter: drop-shadow(0 0 10px var(--main-color));
-  }
-
-  .last-follower:hover .last-follower-pfp {
-    transform: scale(1.1);
-    box-shadow: 0 0 16px var(--main-color);
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+  @media (max-width: 768px) {
+    .pfp { width: 80px; height: 80px; }
+    .followers-count { font-size: 2.2rem; }
+    .last-follower { font-size: 0.9rem; }
   }
 `;
 document.head.appendChild(style);
