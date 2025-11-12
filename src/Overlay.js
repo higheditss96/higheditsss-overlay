@@ -1,17 +1,21 @@
-// === HIGHSTATS OVERLAY — cu Show Profile Picture ON/OFF ===
+// === HIGHSTATS OVERLAY — FIX: showProfilePic No ===
 
 const params = new URLSearchParams(window.location.search);
 const username = params.get("user") || "hyghman";
 const color = params.get("color") || "#00ffaa";
 const font = params.get("font") || "Poppins";
 const useGoal = params.get("useGoal") === "true";
-const showProfilePic = (params.get("showProfilePic") || "Yes").toLowerCase() === "yes";
+const showProfilePicParam = params.get("showProfilePic") || "Yes";
+
+// ⚡ conversie sigură — tratează orice formă de "no", "No", "NO"
+const showProfilePic = showProfilePicParam.toLowerCase() === "yes";
+
 const goal = parseInt(params.get("goal") || "10000");
 
 document.body.style.setProperty("--main-color", color);
 document.body.style.fontFamily = font;
 
-// === HTML STRUCTURE ===
+// === STRUCTURA HTML ===
 document.body.innerHTML = `
   <div class="overlay">
     <div class="glass-card ${showProfilePic ? "with-pfp" : "no-pfp"}">
@@ -35,6 +39,7 @@ document.body.innerHTML = `
   </div>
 `;
 
+// === RESTUL CODULUI ===
 const pfp = document.getElementById("pfp");
 const followersEl = document.getElementById("followers");
 const goalBar = document.querySelector(".goal-bar");
@@ -44,7 +49,6 @@ const pulseBg = document.querySelector(".pulse-bg");
 
 let lastFollowerCount = null;
 
-// === FETCH FOLLOWERS ===
 async function fetchFollowers() {
   try {
     const res = await fetch(`https://kick.com/api/v2/channels/${username}`);
@@ -60,7 +64,7 @@ async function fetchFollowers() {
     followersEl.textContent = followers.toLocaleString("en-US");
 
     fadeIn(followersEl);
-    if (showProfilePic && pfp) fadeIn(pfp);
+    if (pfp && showProfilePic) fadeIn(pfp);
     if (goalBar) fadeIn(goalBar);
 
     if (useGoal && goalFill && goalText) {
@@ -138,35 +142,9 @@ style.textContent = `
     transition: transform 0.3s ease;
   }
 
-  /* Ajustare automată când poza e ascunsă */
   .glass-card.no-pfp {
     gap: 10px;
-    padding: 28px 40px;
-  }
-
-  .pulse-bg {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 300%;
-    height: 300%;
-    background: radial-gradient(circle, var(--main-color) 0%, transparent 70%);
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.3);
-    pointer-events: none;
-    transition: opacity 0.3s ease, transform 0.5s ease;
-    z-index: 0;
-  }
-
-  .pulse-bg.active {
-    opacity: 0.25;
-    transform: translate(-50%, -50%) scale(1);
-    animation: fadePulse 0.6s ease forwards;
-  }
-
-  @keyframes fadePulse {
-    0% { opacity: 0.25; transform: translate(-50%, -50%) scale(1); }
-    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.8); }
+    padding: 30px 50px;
   }
 
   .pfp {
