@@ -1,15 +1,10 @@
-// === HIGHSTATS OVERLAY — FIX: showProfilePic No ===
+// === HIGHSTATS FOLLOWER OVERLAY — Clean Version (no stroke) ===
 
 const params = new URLSearchParams(window.location.search);
 const username = params.get("user") || "hyghman";
 const color = params.get("color") || "#00ffaa";
 const font = params.get("font") || "Poppins";
 const useGoal = params.get("useGoal") === "true";
-const showProfilePicParam = params.get("showProfilePic") || "Yes";
-
-// ⚡ conversie sigură — tratează orice formă de "no", "No", "NO"
-const showProfilePic = showProfilePicParam.toLowerCase() === "yes";
-
 const goal = parseInt(params.get("goal") || "10000");
 
 document.body.style.setProperty("--main-color", color);
@@ -18,40 +13,34 @@ document.body.style.fontFamily = font;
 // === STRUCTURA HTML ===
 document.body.innerHTML = `
   <div class="overlay">
-    <div class="glass-card ${showProfilePic ? "with-pfp" : "no-pfp"}">
-      ${
-        showProfilePic
-          ? `<img id="pfp" class="pfp hidden" src="https://cdn.kick.com/images/default-avatar.png" alt="Profile Picture" />`
-          : ""
-      }
-      <div id="followers" class="followers-count hidden">N/A</div>
-      ${
-        useGoal
-          ? `
-        <div class="goal-bar hidden">
-          <div class="goal-fill"></div>
-          <div class="goal-text">0 / ${goal.toLocaleString("en-US")}</div>
-        </div>`
-          : ""
-      }
-      <div class="pulse-bg"></div>
-    </div>
+    <img id="pfp" class="pfp hidden" src="https://cdn.kick.com/images/default-avatar.png" alt="Profile Picture" />
+    <div id="followers" class="followers-count hidden">N/A</div>
+    ${
+      useGoal
+        ? `
+      <div class="goal-bar hidden">
+        <div class="goal-fill"></div>
+        <div class="goal-text">0 / ${goal.toLocaleString("en-US")}</div>
+      </div>`
+        : ""
+    }
   </div>
 `;
 
-// === RESTUL CODULUI ===
 const pfp = document.getElementById("pfp");
 const followersEl = document.getElementById("followers");
 const goalBar = document.querySelector(".goal-bar");
 const goalFill = document.querySelector(".goal-fill");
 const goalText = document.querySelector(".goal-text");
-const pulseBg = document.querySelector(".pulse-bg");
 
 let lastFollowerCount = null;
 
+// === FETCH FOLLOWERS FROM KICK ===
 async function fetchFollowers() {
   try {
-    const res = await fetch(`https://kick.com/api/v2/channels/${username}`);
+    let res = await fetch(`https://kick.com/api/v2/channels/${username}`);
+    if (!res.ok) throw new Error("Kick.com API failed, trying backup");
+
     const data = await res.json();
 
     const avatar =
@@ -60,12 +49,13 @@ async function fetchFollowers() {
       "https://cdn.kick.com/images/default-avatar.png";
     const followers = data?.followers_count || data?.followersCount || 0;
 
-    if (pfp && showProfilePic) pfp.src = avatar;
+    // === UPDATE UI ===
+    pfp.src = avatar;
     followersEl.textContent = followers.toLocaleString("en-US");
 
-    fadeIn(followersEl);
-    if (pfp && showProfilePic) fadeIn(pfp);
-    if (goalBar) fadeIn(goalBar);
+    fadeInElement(pfp);
+    fadeInElement(followersEl);
+    if (goalBar) fadeInElement(goalBar);
 
     if (useGoal && goalFill && goalText) {
       const percent = Math.min(100, (followers / goal) * 100);
@@ -73,38 +63,70 @@ async function fetchFollowers() {
       goalText.textContent = `${followers.toLocaleString("en-US")} / ${goal.toLocaleString("en-US")}`;
     }
 
+    // === Detect follow/unfollow ===
     if (lastFollowerCount !== null && followers !== lastFollowerCount) {
-      if (followers > lastFollowerCount) triggerFollow();
-      else triggerUnfollow();
+      triggerFollowAnimation(followers > lastFollowerCount ? "follow" : "unfollow");
     }
 
     lastFollowerCount = followers;
-  } catch {
-    followersEl.textContent = "N/A";
+  } catch (err) {
+    console.warn("❌ Kick API failed:", err);
+
+    try {
+      const alt = await fetch(`https://kickapi.su/api/v2/channels/${username}`);
+      const data2 = await alt.json();
+
+      const avatar =
+        data2?.user?.profile_pic ||
+        data2?.user?.profilePic ||
+        "https://cdn.kick.com/images/default-avatar.png";
+      const followers = data2?.followersCount || 0;
+
+      pfp.src = avatar;
+      followersEl.textContent = followers.toLocaleString("en-US");
+
+      fadeInElement(pfp);
+      fadeInElement(followersEl);
+      if (goalBar) fadeInElement(goalBar);
+
+      if (useGoal && goalFill && goalText) {
+        const percent = Math.min(100, (followers / goal) * 100);
+        goalFill.style.width = `${percent}%`;
+        goalText.textContent = `${followers.toLocaleString("en-US")} / ${goal.toLocaleString("en-US")}`;
+      }
+
+      if (lastFollowerCount !== null && followers !== lastFollowerCount) {
+        triggerFollowAnimation(followers > lastFollowerCount ? "follow" : "unfollow");
+      }
+
+      lastFollowerCount = followers;
+    } catch (e) {
+      followersEl.textContent = "N/A";
+    }
   }
 }
 
-function fadeIn(el) {
+// === FADE-IN FUNCTION ===
+function fadeInElement(el) {
   el.classList.remove("hidden");
   el.classList.add("fade-in");
 }
 
-function triggerFollow() {
-  const overlay = document.querySelector(".glass-card");
-  overlay.classList.remove("follow-anim");
-  pulseBg.classList.remove("active");
-  void overlay.offsetWidth;
-  overlay.classList.add("follow-anim");
-  pulseBg.classList.add("active");
+// === FOLLOW/UNFOLLOW ANIMATION ===
+function triggerFollowAnimation(type) {
+  const overlay = document.querySelector(".overlay");
+
+  overlay.classList.remove("follow-anim", "unfollow-anim");
+  void overlay.offsetWidth; // restart animation
+
+  if (type === "follow") {
+    overlay.classList.add("follow-anim");
+  } else {
+    overlay.classList.add("unfollow-anim");
+  }
 }
 
-function triggerUnfollow() {
-  const overlay = document.querySelector(".glass-card");
-  overlay.classList.remove("unfollow-anim");
-  void overlay.offsetWidth;
-  overlay.classList.add("unfollow-anim");
-}
-
+// === REFRESH AUTO ===
 fetchFollowers();
 setInterval(fetchFollowers, 10000);
 
@@ -118,33 +140,17 @@ style.textContent = `
     align-items: center;
     height: 100vh;
     margin: 0;
+    color: white;
     font-family: "${font}", sans-serif;
   }
 
   .overlay {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .glass-card {
-    position: relative;
+    text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 18px;
-    padding: 24px 40px;
-    border-radius: 24px;
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(16px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    overflow: hidden;
+    gap: 16px;
     transition: transform 0.3s ease;
-  }
-
-  .glass-card.no-pfp {
-    gap: 10px;
-    padding: 30px 50px;
   }
 
   .pfp {
@@ -154,8 +160,8 @@ style.textContent = `
     object-fit: cover;
     opacity: 0;
     transform: scale(0.9);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
-    z-index: 2;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
 
   .followers-count {
@@ -165,7 +171,7 @@ style.textContent = `
     text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     opacity: 0;
     transform: translateY(10px);
-    z-index: 2;
+    transition: transform 0.3s ease;
   }
 
   .goal-bar {
@@ -178,7 +184,6 @@ style.textContent = `
     box-shadow: 0 0 8px rgba(0,0,0,0.3);
     opacity: 0;
     transform: translateY(10px);
-    z-index: 2;
   }
 
   .goal-fill {
@@ -191,26 +196,35 @@ style.textContent = `
   }
 
   .goal-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    position: relative;
+    z-index: 2;
     color: white;
     font-weight: 700;
     font-size: 1.1rem;
     text-shadow: 0 2px 6px rgba(0,0,0,0.5);
-    z-index: 3;
-    white-space: nowrap;
+    line-height: 28px;
   }
 
-  .fade-in { animation: fadeIn 0.8s ease forwards; }
+  /* === ANIMAȚII === */
+  .fade-in {
+    animation: fadeIn 0.8s ease forwards;
+  }
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.9) translateY(10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+    from {
+      opacity: 0;
+      transform: scale(0.9) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
   }
 
-  .follow-anim { animation: followEffect 0.6s ease; }
+  /* === Follow animation === */
+  .follow-anim {
+    animation: followEffect 0.6s ease;
+  }
 
   @keyframes followEffect {
     0% { transform: scale(1); }
@@ -218,7 +232,10 @@ style.textContent = `
     100% { transform: scale(1); }
   }
 
-  .unfollow-anim { animation: unfollowEffect 0.6s ease; }
+  /* === Unfollow animation === */
+  .unfollow-anim {
+    animation: unfollowEffect 0.6s ease;
+  }
 
   @keyframes unfollowEffect {
     0% { transform: scale(1); opacity: 1; }
@@ -226,6 +243,8 @@ style.textContent = `
     100% { transform: scale(1); opacity: 1; }
   }
 
-  .hidden { opacity: 0; }
+  .hidden {
+    opacity: 0;
+  }
 `;
 document.head.appendChild(style);
