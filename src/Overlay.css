@@ -1,239 +1,86 @@
-/* === CONTAINER GENERAL === */
-.overlay-container {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
+body {
   background: transparent;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: "Poppins", sans-serif;
+}
+
+.overlay-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  --main-color: #00ffaa;
+  gap: 14px;
+  position: relative;
 }
 
-/* === PROFIL PIC === */
 .pfp {
   width: 110px;
   height: 110px;
   border-radius: 50%;
   object-fit: cover;
-  margin-bottom: 12px;
-  z-index: 3;
-  opacity: 0;
-  animation: fadeInPic 1.2s ease forwards;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: none;
 }
 
-.pfp:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.7);
-}
-
-@keyframes fadeInPic {
-  0% {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* === FOLLOWER COUNT === */
-.followers-count {
-  font-family: "Poppins", sans-serif;
-  font-size: 4.2rem;
+.followers {
+  font-size: 4rem;
   font-weight: 700;
   color: var(--main-color);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  z-index: 3;
-  transition: transform 0.2s ease, text-shadow 0.3s ease;
-  margin-bottom: 8px;
-}
-
-.followers-count.no-pfp {
-  margin-top: -20px;
-}
-
-/* === GOAL BAR === */
-.goal-container {
-  width: 360px;
-  height: 30px;
-  border-radius: 50px;
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
-  overflow: hidden;
-  position: relative;
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: 0.3s ease;
 }
 
 .goal-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
+  width: 360px;
+  height: 26px;
+  border-radius: 60px;
+  background: rgba(255,255,255,0.15);
+  overflow: hidden;
+  position: relative;
+  display: none;
+}
+
+.goal-fill {
   height: 100%;
   width: 0%;
-  border-radius: 50px;
-  background: var(--goal-color, #00ffaa);
-  transition: width 1s ease-in-out;
+  background: var(--main-color);
+  transition: width 0.6s ease-in-out;
 }
 
-/* Textul (numerele) centrat */
 .goal-text {
   position: absolute;
-  top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  color: #ffffff;
-  font-size: 1.3rem;
-  font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  z-index: 3;
-  user-select: none;
-  white-space: nowrap;
-}
-
-/* === AURA === */
-.aura {
-  position: absolute;
   top: 50%;
-  left: 50%;
-  width: 220px;
-  height: 220px;
   transform: translate(-50%, -50%);
-  border-radius: 50%;
-  filter: blur(30px);
-  z-index: 0;
-  opacity: 0.2;
-  transition: background 0.5s ease;
-  animation: auraFloat 6s ease-in-out infinite alternate;
-}
-
-@keyframes auraFloat {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  100% {
-    transform: translate(-50%, -52%) scale(1.05);
-  }
-}
-
-/* === LAST FOLLOWER === */
-.last-follower {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 18px;
-  color: #ffffff;
-  font-family: "Poppins", sans-serif;
-  font-size: 1.15rem;
-  font-weight: 600;
-  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.4); /* doar drop shadow */
-  animation: fadeInFollower 0.6s ease-in-out;
-  z-index: 5;
-}
-
-.last-follower span {
-  opacity: 0.8;
+  color: white;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.last-follower strong {
-  color: #ffffff;
-  font-weight: 700;
-  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); /* drop shadow pe text */
+.fade-in {
+  opacity: 1 !important;
+  transform: translateY(0px) !important;
 }
 
-.last-follower-pfp {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: none;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6); /* doar umbră, fără glow */
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.last-follower:hover .last-follower-pfp {
-  transform: scale(1.05);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.6);
-}
-
-@keyframes fadeInFollower {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* === BULE === */
-.bubble-layer {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 2;
-}
-
-.bubble {
+.pulse-spark {
   position: absolute;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
-  opacity: 0.9;
-  animation: riseBubble linear forwards;
+  background: radial-gradient(circle, var(--main-color), transparent);
+  opacity: 0;
+  pointer-events: none;
 }
 
-@keyframes riseBubble {
-  0% {
-    transform: translate(0, 0) scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: translate(calc(var(--dx) / 2), calc(var(--dy) / 2)) scale(1.2);
-    opacity: 0.8;
-  }
-  100% {
-    transform: translate(var(--dx), var(--dy)) scale(0.5);
-    opacity: 0;
-  }
+.pulse-spark.active {
+  animation: spark 0.6s ease-out forwards;
 }
 
-/* === RESPONSIVE === */
-@media (max-width: 768px) {
-  .followers-count {
-    font-size: 2.8rem;
-  }
-
-  .pfp {
-    width: 70px;
-    height: 70px;
-  }
-
-  .goal-container {
-    width: 85%;
-    height: 24px;
-  }
-
-  .goal-text {
-    font-size: 1rem;
-  }
-
-  .last-follower {
-    font-size: 1rem;
-  }
-
-  .last-follower-pfp {
-    width: 28px;
-    height: 28px;
-  }
+@keyframes spark {
+  0% { opacity: 0.7; transform: scale(0.3); }
+  100% { opacity: 0; transform: scale(1.5); }
 }
