@@ -1,17 +1,25 @@
-// === HIGHGOAL OVERLAY — GOLD GOAL + PROFILE PIC FIX + WHITE COUNT ===
+// === HIGHGOAL OVERLAY — GOLD GOAL + PROFILE PIC + WHITE COUNT ===
 
+// Query params din OBS URL
 const params = new URLSearchParams(window.location.search);
 
 const username = params.get("user") || "hyghman";
 const color = params.get("color") || "#00ffaa";
 const font = params.get("font") || "Poppins";
+const useGoal = params.get("useGoal") === "true";
+const goal = parseInt(params.get("goal") || "10000", 10);
+
+// Acceptăm atât showProfilePic, cât și showProfilePicture pentru compat
+const showPicParam =
+  params.get("showProfilePic") ??
+  params.get("showProfilePicture") ??
+  "true";
 
 const showProfilePic =
-  (params.get("showProfilePic") || "yes").toLowerCase() === "yes";
+  showPicParam === "true" ||
+  showPicParam.toLowerCase() === "yes";
 
-const useGoal = params.get("useGoal") === "true";
-const goal = parseInt(params.get("goal") || "10000");
-
+// stil global
 document.body.style.setProperty("--main-color", color);
 document.body.style.fontFamily = font;
 
@@ -26,10 +34,10 @@ document.body.innerHTML = `
     ${
       useGoal
         ? `
-        <div class="goal-bar hidden">
-            <div class="goal-fill"></div>
-            <div class="goal-text"></div>
-        </div>`
+      <div class="goal-bar hidden">
+        <div class="goal-fill"></div>
+        <div class="goal-text"></div>
+      </div>`
         : ""
     }
 
@@ -37,12 +45,12 @@ document.body.innerHTML = `
   </div>
 `;
 
-// === ELEMENTS ===
+// === ELEMENTE ===
 const followersEl = document.getElementById("followers");
-const pfp = document.getElementById("pfp");
-const goalBar = document.querySelector(".goal-bar");
-const goalFill = document.querySelector(".goal-fill");
-const goalText = document.querySelector(".goal-text");
+const pfpEl = document.getElementById("pfp");
+const goalBarEl = document.querySelector(".goal-bar");
+const goalFillEl = document.querySelector(".goal-fill");
+const goalTextEl = document.querySelector(".goal-text");
 const confettiLayer = document.getElementById("confettiLayer");
 
 let lastFollowers = 0;
@@ -51,51 +59,54 @@ window.goalHit = false;
 // === COUNTUP ===
 function countUp(el, from, to, duration = 900) {
   const start = performance.now();
+
   function frame(now) {
     const progress = Math.min((now - start) / duration, 1);
-    el.textContent = Math.floor(from + (to - from) * progress).toLocaleString();
+    const value = Math.floor(from + (to - from) * progress);
+    el.textContent = value.toLocaleString("en-US");
+
     if (progress < 1) requestAnimationFrame(frame);
   }
+
   requestAnimationFrame(frame);
 }
 
-// === FETCH FOLLOWERS ===
+// === FETCH FOLLOWERS (API v1, simplu) ===
 async function fetchFollowers() {
   try {
-    const res = await fetch(`https://kick.com/api/v2/channels/${username}`);
+    const res = await fetch(`https://kick.com/api/v1/channels/${username}`);
     const data = await res.json();
 
-    // ❤️ FIX PFP – API fallback
+    // profil pic – încercăm mai multe câmpuri
     const avatar =
       data?.user?.profile_pic ||
       data?.user?.profilePic ||
-      data?.user?.pfp ||
-      data?.pfp ||
+      data?.user?.avatar ||
       null;
 
-    if (showProfilePic && avatar) {
-      pfp.src = avatar + "?t=" + Date.now(); // force refresh
-      fadeIn(pfp);
+    if (showProfilePic && avatar && pfpEl) {
+      pfpEl.src = avatar;
+      fadeIn(pfpEl);
     }
 
-    const followers = data?.followers_count ?? 0;
+    const followers = data?.followersCount ?? 0;
 
     countUp(followersEl, lastFollowers, followers);
     fadeIn(followersEl);
 
-    // === GOAL BAR ===
-    if (useGoal && goalBar) {
-      fadeIn(goalBar);
+    // === GOAL ===
+    if (useGoal && goalBarEl && goalFillEl && goalTextEl) {
+      fadeIn(goalBarEl);
 
       const pct = Math.min(100, (followers / goal) * 100);
-      goalFill.style.width = pct + "%";
+      goalFillEl.style.width = `${pct}%`;
 
       if (!window.goalHit && followers >= goal) {
         window.goalHit = true;
         triggerGoalReached();
-      } else {
-        goalText.textContent =
-          `${followers.toLocaleString()} / ${goal.toLocaleString()}`;
+      } else if (!window.goalHit) {
+        goalTextEl.textContent =
+          `${followers.toLocaleString("en-US")} / ${goal.toLocaleString("en-US")}`;
       }
     }
 
@@ -105,17 +116,17 @@ async function fetchFollowers() {
   }
 }
 
-// === GOLD GOAL ANIMATION ===
+// === GOLD GOAL permanent + confetti =====
 function triggerGoalReached() {
-  // GOLD MODE permanent
-  goalBar.classList.add("goal-complete");
-  goalFill.classList.add("goal-fill-complete");
+  if (!goalBarEl || !goalFillEl || !goalTextEl) return;
 
-  goalFill.style.width = "100%";
-  goalText.textContent = "GOAL REACHED";
-  goalText.classList.add("goal-text-glow");
+  goalBarEl.classList.add("goal-complete");
+  goalFillEl.classList.add("goal-fill-complete");
+  goalFillEl.style.width = "100%";
 
-  // OPTIONAL confetti
+  goalTextEl.textContent = "GOAL REACHED";
+  goalTextEl.classList.add("goal-text-glow");
+
   spawnConfetti();
 }
 
@@ -123,7 +134,10 @@ function triggerGoalReached() {
 function spawnConfetti() {
   if (!confettiLayer) return;
 
-  for (let i = 0; i < 70; i++) {
+  const pieces = 70;
+  const goldColors = ["#FFD700", "#FFEA70", "#FFC400", "#FFDD55"];
+
+  for (let i = 0; i < pieces; i++) {
     const piece = document.createElement("div");
     piece.className = "confetti-piece";
 
@@ -134,9 +148,8 @@ function spawnConfetti() {
     piece.style.left = `${x}vw`;
     piece.style.animationDelay = `${delay}s`;
     piece.style.animationDuration = `${duration}s`;
-
-    const goldColors = ["#FFD700", "#FFEA70", "#FFC400", "#FFDD55"];
-    piece.style.background = goldColors[Math.floor(Math.random() * goldColors.length)];
+    piece.style.background =
+      goldColors[Math.floor(Math.random() * goldColors.length)];
 
     confettiLayer.appendChild(piece);
 
@@ -144,16 +157,18 @@ function spawnConfetti() {
   }
 }
 
+// === ANIMATIE GENERICĂ ===
 function fadeIn(el) {
+  if (!el) return;
   el.classList.remove("hidden");
   el.classList.add("fade-in");
 }
 
-// RUN
+// === RUN LOOP ===
 fetchFollowers();
 setInterval(fetchFollowers, 10000);
 
-// === CSS ===
+// === CSS injectat ===
 const style = document.createElement("style");
 style.textContent = `
   body {
@@ -166,7 +181,7 @@ style.textContent = `
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 14px;
+    gap: ${showProfilePic ? "10px" : "12px"};
     height: 100vh;
   }
 
@@ -174,21 +189,23 @@ style.textContent = `
     width: 140px;
     height: 140px;
     border-radius: 50%;
+    object-fit: cover;
     box-shadow: 0 8px 24px rgba(0,0,0,0.7);
     opacity: 0;
     transition: 0.4s;
   }
 
   .followers {
-    font-size: 4.6rem;
+    font-size: 4.4rem;
     font-weight: 800;
-    color: white; /* NUMĂR ALB */
+    color: #ffffff;          /* NUMĂR ALB */
     opacity: 0;
     text-shadow: 0 5px 16px rgba(0,0,0,0.8);
-    transition: 0.4s;
+    transition: 0.35s;
   }
 
   .goal-bar {
+    margin-top: 6px;         /* mai aproape de număr */
     width: 420px;
     height: 34px;
     border-radius: 40px;
@@ -196,7 +213,7 @@ style.textContent = `
     overflow: hidden;
     opacity: 0;
     position: relative;
-    transition: 0.4s;
+    transition: 0.35s;
   }
 
   .goal-fill {
@@ -211,12 +228,12 @@ style.textContent = `
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    color: white;
+    color: #ffffff;
     font-weight: 700;
     text-shadow: 0 5px 12px rgba(0,0,0,0.7);
   }
 
-  /* === GOLD MODE === */
+  /* GOLD GOAL permanent */
   .goal-complete {
     background: rgba(255,215,0,0.35);
     border: 2px solid gold;
@@ -232,7 +249,7 @@ style.textContent = `
     text-shadow: 0 0 10px gold, 0 0 25px gold;
   }
 
-  /* === CONFETTI === */
+  /* CONFETTI */
   .confetti-layer {
     position: fixed;
     inset: 0;
@@ -251,7 +268,7 @@ style.textContent = `
   }
 
   @keyframes confettiFall {
-    0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+    0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
     100% { opacity: 0; transform: translateY(110vh) rotate(360deg); }
   }
 
